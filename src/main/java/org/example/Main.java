@@ -1,14 +1,30 @@
 package org.example;
 
 import javax.swing.*;
-import javax.swing.JFrame;
+import java.awt.*;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     public static void main(String[] args) {
+        // Create frame
         JFrame frame = new JFrame("Graph Partitioning");
-        main_ui form = new main_ui();
-        frame.setContentPane(form.getPanel());
+
+        // Create MainUI instance
+        MainUI form = new MainUI();
+        JPanel panel = form.getPanel();
+        
+        // Verify panel is not null before setting
+        if (panel == null) {
+            // Fallback to a default panel if MainUI.getPanel() returns null
+            panel = new JPanel();
+            panel.add(new JLabel("Error: Could not load main panel"));
+        }
+        
+        frame.setContentPane(panel);
+
+        // Frame settings
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(400, 300);
+        frame.setLocationRelativeTo(null); // Center on screen
+        frame.setVisible(true);
     }
 }
