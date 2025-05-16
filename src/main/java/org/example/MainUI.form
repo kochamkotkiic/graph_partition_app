@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="org.example.MainUI">
-  <grid id="27dc6" binding="MainPage" layout-manager="GridLayoutManager" row-count="8" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-    <margin top="0" left="0" bottom="0" right="0"/>
+  <grid id="27dc6" binding="MainPage" custom-create="true" layout-manager="GridBagLayout">
     <constraints>
-      <xy x="8" y="3" width="820" height="433"/>
+      <xy x="20" y="3" width="1333" height="494"/>
     </constraints>
     <properties>
       <autoscrolls value="true"/>
@@ -13,23 +12,129 @@
     </properties>
     <border type="none"/>
     <children>
-      <component id="599d0" class="javax.swing.JLabel" binding="instructionNumCuts">
+      <grid id="a8a" binding="graphPanelPlaceholder" layout-manager="GridBagLayout">
         <constraints>
-          <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="4" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="2" column="0" row-span="6" col-span="2" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.0" weighty="1.0"/>
         </constraints>
-        <properties>
-          <alignmentY value="0.5"/>
-          <foreground color="-4516742"/>
-          <horizontalAlignment value="10"/>
-          <horizontalTextPosition value="11"/>
-          <text value="liczba przecięć"/>
-        </properties>
-      </component>
+        <properties/>
+        <border type="none"/>
+        <children/>
+      </grid>
+      <grid id="504b3" layout-manager="GridBagLayout">
+        <constraints>
+          <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="1.0" weighty="1.0"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <component id="2f8b3" class="javax.swing.JLabel" binding="instructionNumCuts">
+            <constraints>
+              <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="4" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
+              <gridbag top="0" left="0" bottom="0" right="20" weightx="0.0" weighty="0.0"/>
+            </constraints>
+            <properties>
+              <alignmentY value="0.5"/>
+              <foreground color="-4516742"/>
+              <horizontalAlignment value="10"/>
+              <horizontalTextPosition value="11"/>
+              <text value="liczba przecięć"/>
+            </properties>
+          </component>
+          <component id="3fd" class="javax.swing.JButton">
+            <constraints>
+              <grid row="9" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="1" fill="0" indent="0" use-parent-layout="false"/>
+              <gridbag weightx="1.0" weighty="1.0"/>
+            </constraints>
+            <properties>
+              <background color="-2192736"/>
+              <foreground color="-5306302"/>
+              <text value="Podziel😼"/>
+            </properties>
+          </component>
+          <component id="61e99" class="javax.swing.JLabel" binding="instructionMargines">
+            <constraints>
+              <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
+              <gridbag top="0" left="0" bottom="0" right="20" weightx="0.0" weighty="0.0"/>
+            </constraints>
+            <properties>
+              <foreground color="-4516742"/>
+              <text value="margines %"/>
+            </properties>
+          </component>
+          <component id="8d12b" class="javax.swing.JSpinner" binding="spinnerMargines">
+            <constraints>
+              <grid row="7" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+              <gridbag top="0" left="0" bottom="0" right="20" weightx="0.0" weighty="0.0"/>
+            </constraints>
+            <properties>
+              <autoscrolls value="false"/>
+              <background color="-2192736"/>
+              <foreground color="-5306302"/>
+            </properties>
+          </component>
+          <component id="24de0" class="javax.swing.JSpinner" binding="spinnerNumCuts">
+            <constraints>
+              <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+              <gridbag top="0" left="0" bottom="0" right="20" weightx="0.0" weighty="0.0"/>
+            </constraints>
+            <properties>
+              <autoscrolls value="false"/>
+              <background color="-2192736"/>
+              <foreground color="-5306302"/>
+            </properties>
+          </component>
+          <vspacer id="255c5">
+            <constraints>
+              <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+              <gridbag weightx="0.0" weighty="0.0"/>
+            </constraints>
+          </vspacer>
+          <vspacer id="c54d2">
+            <constraints>
+              <grid row="5" column="1" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+              <gridbag weightx="0.0" weighty="0.0"/>
+            </constraints>
+          </vspacer>
+          <vspacer id="ae72a">
+            <constraints>
+              <grid row="6" column="1" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+              <gridbag weightx="0.0" weighty="0.0"/>
+            </constraints>
+          </vspacer>
+          <vspacer id="62da8">
+            <constraints>
+              <grid row="8" column="1" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+              <gridbag top="0" left="0" bottom="5" right="0" weightx="0.0" weighty="0.0"/>
+            </constraints>
+          </vspacer>
+          <vspacer id="e6125">
+            <constraints>
+              <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+              <gridbag weightx="0.0" weighty="0.0"/>
+            </constraints>
+          </vspacer>
+          <hspacer id="1979d">
+            <constraints>
+              <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+              <gridbag weightx="0.0" weighty="0.0"/>
+            </constraints>
+          </hspacer>
+        </children>
+      </grid>
+      <hspacer id="db3cd">
+        <constraints>
+          <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag top="0" left="1050" bottom="0" right="0" weightx="0.0" weighty="0.0"/>
+        </constraints>
+      </hspacer>
       <component id="56548" class="javax.swing.JLabel" binding="pageTitle">
         <constraints>
-          <grid row="0" column="0" row-span="6" col-span="1" vsize-policy="0" hsize-policy="0" anchor="1" fill="0" indent="0" use-parent-layout="false">
+          <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="1" fill="0" indent="0" use-parent-layout="false">
             <preferred-size width="713" height="25"/>
           </grid>
+          <gridbag weightx="0.0" weighty="0.0"/>
         </constraints>
         <properties>
           <font size="20"/>
@@ -42,62 +147,56 @@
           <verticalTextPosition value="0"/>
         </properties>
       </component>
-      <component id="bc4f" class="javax.swing.JSpinner" binding="spinnerNumCuts">
+      <component id="9e8ad" class="javax.swing.JLabel" binding="successfulCuts">
         <constraints>
-          <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="3" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
+          <gridbag top="0" left="0" bottom="0" right="20" weightx="0.0" weighty="0.0"/>
         </constraints>
         <properties>
-          <autoscrolls value="false"/>
+          <text value="..."/>
+        </properties>
+      </component>
+      <component id="1a903" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="2" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
+          <gridbag top="0" left="0" bottom="0" right="20" weightx="0.0" weighty="0.0"/>
+        </constraints>
+        <properties>
+          <foreground color="-16098304"/>
+          <text value="liczba udanych przecięć grafu"/>
+        </properties>
+      </component>
+      <component id="215c2" class="javax.swing.JButton" binding="resetujWidokButton" default-binding="true">
+        <constraints>
+          <grid row="7" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="2" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.0" weighty="0.0"/>
+        </constraints>
+        <properties>
           <background color="-2192736"/>
           <foreground color="-5306302"/>
+          <text value="resetuj widok"/>
         </properties>
       </component>
-      <component id="d1229" class="javax.swing.JLabel" binding="instructionMargines" custom-create="true">
+      <component id="2ecd" class="javax.swing.JLabel" binding="questionIsGraphBalanced">
         <constraints>
-          <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <foreground color="-4516742"/>
-          <text value="margines %"/>
-        </properties>
-      </component>
-      <component id="ee66e" class="javax.swing.JSpinner" binding="spinnerMargines">
-        <constraints>
-          <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <autoscrolls value="false"/>
-          <background color="-2192736"/>
-          <foreground color="-5306302"/>
-        </properties>
-      </component>
-      <component id="6a6f" class="javax.swing.JSeparator">
-        <constraints>
-          <grid row="5" column="1" row-span="3" col-span="1" vsize-policy="6" hsize-policy="6" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="4" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
+          <gridbag top="0" left="0" bottom="0" right="20" weightx="0.0" weighty="0.0"/>
         </constraints>
         <properties>
           <foreground color="-4488797"/>
+          <text value="czy graf jest spójny?"/>
         </properties>
       </component>
-      <component id="2eb92" class="javax.swing.JButton" binding="buttonPodziel" custom-create="true">
+      <component id="17fc5" class="javax.swing.JLabel" binding="isGraphBalanced">
         <constraints>
-          <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="5" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
+          <gridbag top="0" left="0" bottom="0" right="20" weightx="0.0" weighty="0.0"/>
         </constraints>
         <properties>
-          <background color="-2192736"/>
-          <foreground color="-5306302"/>
-          <text value="Podziel😼"/>
+          <requestFocusEnabled value="true"/>
+          <text value="..."/>
         </properties>
       </component>
-      <grid id="a8a" binding="graphPanelPlaceholder" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-        <margin top="0" left="0" bottom="0" right="0"/>
-        <constraints>
-          <grid row="6" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties/>
-        <border type="none"/>
-        <children/>
-      </grid>
     </children>
   </grid>
 </form>
