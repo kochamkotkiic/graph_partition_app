@@ -6,6 +6,11 @@ import java.io.File;
 
 public class MainFrame extends JFrame {
     private MainUI mainUI;
+    public void switchToPanel(JPanel newPanel) {
+        setContentPane(newPanel);
+        revalidate(); // odświeżenie layoutu
+        repaint();
+    }
 
     public MainFrame() {
         // Podstawowa konfiguracja okna
@@ -14,7 +19,16 @@ public class MainFrame extends JFrame {
 
         // Utworzenie głównego interfejsu
         mainUI = new MainUI();
-        setContentPane(mainUI.getPanel());
+        mainUI.getdetailsButton().addActionListener(e -> {
+            DetailsUI detailsUI = new DetailsUI();
+            switchToPanel(detailsUI.getPanel());
+
+            detailsUI.getBackButton().addActionListener(ev -> {
+                switchToPanel(mainUI.getPanel());
+            });
+        });
+        switchToPanel(mainUI.getPanel());
+
 
         // Utworzenie i dodanie menu
         createMenu();

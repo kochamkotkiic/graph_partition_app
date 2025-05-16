@@ -14,7 +14,7 @@
     <children>
       <grid id="a8a" binding="graphPanelPlaceholder" layout-manager="GridBagLayout">
         <constraints>
-          <grid row="2" column="0" row-span="6" col-span="2" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <grid row="2" column="0" row-span="7" col-span="2" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
           <gridbag weightx="0.0" weighty="1.0"/>
         </constraints>
         <properties/>
@@ -168,7 +168,7 @@
       </component>
       <component id="215c2" class="javax.swing.JButton" binding="resetujWidokButton" default-binding="true">
         <constraints>
-          <grid row="7" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="2" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="8" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="2" fill="1" indent="0" use-parent-layout="false"/>
           <gridbag weightx="0.0" weighty="0.0"/>
         </constraints>
         <properties>
@@ -195,6 +195,16 @@
         <properties>
           <requestFocusEnabled value="true"/>
           <text value="..."/>
+        </properties>
+      </component>
+      <component id="32b82" class="javax.swing.JButton" binding="detailsButton">
+        <constraints>
+          <grid row="6" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag top="0" left="0" bottom="0" right="20" weightx="0.0" weighty="0.0"/>
+        </constraints>
+        <properties>
+          <foreground color="-4488797"/>
+          <text value="Szczegóły techniczne"/>
         </properties>
       </component>
     </children>

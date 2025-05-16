@@ -22,11 +22,16 @@ public class MainUI {
     private JButton resetujWidokButton;
     private JLabel questionIsGraphBalanced;
     private JLabel isGraphBalanced;  // pole klasy
+    private JButton detailsButton;
 
     private void updateLabelColor(boolean balanced) {
         isGraphBalanced.setForeground(balanced ? Color.GREEN : Color.RED);
         isGraphBalanced.setText(balanced ? "TAK" : "NIE");
 
+    }
+
+    public JButton getdetailsButton() {
+        return detailsButton;
     }
 
     public MainUI() {
@@ -85,7 +90,7 @@ public class MainUI {
         gbc.gridx = 0;
         gbc.gridy = 2;
         gbc.gridwidth = 2;
-        gbc.gridheight = 6;
+        gbc.gridheight = 7;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
         MainPage.add(graphPanelPlaceholder, gbc);
@@ -232,7 +237,7 @@ public class MainUI {
         resetujWidokButton.setText("resetuj widok");
         gbc = new GridBagConstraints();
         gbc.gridx = 2;
-        gbc.gridy = 7;
+        gbc.gridy = 8;
         gbc.anchor = GridBagConstraints.SOUTH;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         MainPage.add(resetujWidokButton, gbc);
@@ -254,6 +259,15 @@ public class MainUI {
         gbc.anchor = GridBagConstraints.EAST;
         gbc.insets = new Insets(0, 0, 0, 20);
         MainPage.add(isGraphBalanced, gbc);
+        detailsButton = new JButton();
+        detailsButton.setForeground(new Color(-4488797));
+        detailsButton.setText("Szczegóły techniczne");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 2;
+        gbc.gridy = 6;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(0, 0, 0, 20);
+        MainPage.add(detailsButton, gbc);
     }
 
     /**
