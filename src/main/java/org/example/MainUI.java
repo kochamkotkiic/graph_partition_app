@@ -13,8 +13,10 @@ public class MainUI {
     private JLabel instructionNumCuts;
     private JTextField numCuts;
     private JLabel instructionMargines;
-    private JSpinner spinner1;
+    private JSpinner spinnerNumCuts;
+    private JSpinner spinnerMargines; // Add this field
     private JButton buttonPodziel;
+    private JPanel graphPanelPlaceholder;
 
     public MainUI() {
         $$$setupUI$$$();
@@ -22,6 +24,14 @@ public class MainUI {
             MainPage = new JPanel();
             MainPage.add(new JLabel("Default Panel Content"));
         }
+
+        // Konfiguracja spinnera dla liczby podziałów
+        SpinnerNumberModel spinnerNumCutsModel = new SpinnerNumberModel(1, 0, Integer.MAX_VALUE, 1);
+        spinnerNumCuts.setModel(spinnerNumCutsModel);
+
+        // Konfiguracja spinnera dla marginesu
+        SpinnerNumberModel spinnerMarginesModel = new SpinnerNumberModel(10, 0, 100, 1);
+        spinnerMargines.setModel(spinnerMarginesModel); // Use the class field instead of finding by index
     }
 
     public JPanel getPanel() {
@@ -36,6 +46,10 @@ public class MainUI {
         numCuts = new JTextField();
         instructionMargines = new JLabel();
         buttonPodziel = new JButton();
+
+        // Initialize both spinners
+        spinnerNumCuts = new JSpinner();
+        spinnerMargines = new JSpinner();
     }
 
     /**
@@ -48,7 +62,7 @@ public class MainUI {
     private void $$$setupUI$$$() {
         createUIComponents();
         MainPage = new JPanel();
-        MainPage.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(6, 2, new Insets(0, 0, 0, 0), -1, -1));
+        MainPage.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(8, 2, new Insets(0, 0, 0, 0), -1, -1));
         MainPage.setAutoscrolls(true);
         Font MainPageFont = this.$$$getFont$$$(null, -1, 20, MainPage.getFont());
         if (MainPageFont != null) MainPage.setFont(MainPageFont);
@@ -72,26 +86,29 @@ public class MainUI {
         pageTitle.setVerifyInputWhenFocusTarget(false);
         pageTitle.setVerticalTextPosition(0);
         MainPage.add(pageTitle, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 6, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_NORTH, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(713, 25), null, 0, false));
-        spinner1 = new JSpinner();
-        spinner1.setAutoscrolls(false);
-        spinner1.setBackground(new Color(-2192736));
-        spinner1.setForeground(new Color(-5306302));
-        MainPage.add(spinner1, new com.intellij.uiDesigner.core.GridConstraints(1, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_EAST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        spinnerNumCuts = new JSpinner();
+        spinnerNumCuts.setAutoscrolls(false);
+        spinnerNumCuts.setBackground(new Color(-2192736));
+        spinnerNumCuts.setForeground(new Color(-5306302));
+        MainPage.add(spinnerNumCuts, new com.intellij.uiDesigner.core.GridConstraints(1, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_EAST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         instructionMargines.setForeground(new Color(-4516742));
         instructionMargines.setText("margines %");
         MainPage.add(instructionMargines, new com.intellij.uiDesigner.core.GridConstraints(2, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_EAST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JSpinner spinner2 = new JSpinner();
-        spinner2.setAutoscrolls(false);
-        spinner2.setBackground(new Color(-2192736));
-        spinner2.setForeground(new Color(-5306302));
-        MainPage.add(spinner2, new com.intellij.uiDesigner.core.GridConstraints(3, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_EAST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        spinnerMargines = new JSpinner();
+        spinnerMargines.setAutoscrolls(false);
+        spinnerMargines.setBackground(new Color(-2192736));
+        spinnerMargines.setForeground(new Color(-5306302));
+        MainPage.add(spinnerMargines, new com.intellij.uiDesigner.core.GridConstraints(3, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_EAST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JSeparator separator1 = new JSeparator();
         separator1.setForeground(new Color(-4488797));
-        MainPage.add(separator1, new com.intellij.uiDesigner.core.GridConstraints(5, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_NORTH, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        MainPage.add(separator1, new com.intellij.uiDesigner.core.GridConstraints(5, 1, 3, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_NORTH, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         buttonPodziel.setBackground(new Color(-2192736));
         buttonPodziel.setForeground(new Color(-5306302));
         buttonPodziel.setText("Podziel\uD83D\uDE3C");
         MainPage.add(buttonPodziel, new com.intellij.uiDesigner.core.GridConstraints(4, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_EAST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        graphPanelPlaceholder = new JPanel();
+        graphPanelPlaceholder.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
+        MainPage.add(graphPanelPlaceholder, new com.intellij.uiDesigner.core.GridConstraints(6, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
     }
 
     /**

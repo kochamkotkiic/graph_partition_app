@@ -62,10 +62,21 @@ public class MainFrame extends JFrame {
 
             if (result == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
-                // Here you can add code to handle the selected text file
-                JOptionPane.showMessageDialog(this, "Selected file: " + selectedFile.getAbsolutePath());
+                if (!selectedFile.getName().toLowerCase().endsWith(".csrrg")) {
+                    JOptionPane.showMessageDialog(this,
+                            "Proszę wybrać plik z rozszerzeniem .csrrg",
+                            "Nieprawidłowy typ pliku",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                JOptionPane.showMessageDialog(this,
+                        "Wczytano graf z pliku tekstowego:\n" +
+                                selectedFile.getName() + "\n\n",
+                        "Graf wczytany pomyślnie",
+                        JOptionPane.INFORMATION_MESSAGE);
             }
         });
+
 
         openBin.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
@@ -78,8 +89,18 @@ public class MainFrame extends JFrame {
 
             if (result == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
-                // Here you can add code to handle the selected binary file
-                JOptionPane.showMessageDialog(this, "Selected file: " + selectedFile.getAbsolutePath());
+                if (!selectedFile.getName().toLowerCase().endsWith(".bin")) {
+                    JOptionPane.showMessageDialog(this,
+                            "Proszę wybrać plik z rozszerzeniem .bin",
+                            "Nieprawidłowy typ pliku",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                JOptionPane.showMessageDialog(this,
+                        "Wczytano graf z pliku binarnego:\n" +
+                                selectedFile.getName() + "\n\n",
+                        "Graf wczytany pomyślnie",
+                        JOptionPane.INFORMATION_MESSAGE);
             }
         });
         openHelp.addActionListener(e -> {
@@ -92,7 +113,7 @@ public class MainFrame extends JFrame {
                             "Po wykonaniu powyższych kroków zostanie wyświetlony\n" +
                             "podzielony graf, gdzie każda spójna część grafu\n" +
                             "będzie w innym kolorze.",
-                    "O programie",
+                    "Pomoc w obsłudze",
                     JOptionPane.INFORMATION_MESSAGE);
         });
         openDescription.addActionListener(e -> {
@@ -101,7 +122,8 @@ public class MainFrame extends JFrame {
                     "Algorytm podziału grafu rozpoczyna się od wyznaczenia wierzchołka centralnego przy użyciu algorytmu Dijkstry, a następnie dzieli graf na dwie grupy metodą DFS,\n"+
                     "dbając o równą liczebność.\n"+
                     "Po podziale sprawdzana jest spójność obu grup — jeśli druga grupa nie jest spójna, zachowywana jest największa jej składowa, a pozostałe wierzchołki są przenoszone do pierwszej grupy.\n"+
-                    "Weryfikowany jest też margines wielkości między grupami. Na koniec z każdej grupy tworzony jest oddzielny podgraf zawierający tylko wewnętrzne połączenia.");
+                    "Weryfikowany jest też margines wielkości między grupami. Na koniec z każdej grupy tworzony jest oddzielny podgraf zawierający tylko wewnętrzne połączenia.",
+                    "O programie",JOptionPane.INFORMATION_MESSAGE);
         });
 
 
