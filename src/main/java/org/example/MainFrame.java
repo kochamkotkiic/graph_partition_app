@@ -42,8 +42,10 @@ public class MainFrame extends JFrame {
         JMenu helpMenu = new JMenu("Pomoc");
         menuBar.add(helpMenu);
         //Pozycje menu Pomoc
-        JMenuItem openHelp = new JMenuItem("O programie");
+        JMenuItem openHelp = new JMenuItem("Pomoc w obsłudze");
+        JMenuItem openDescription= new JMenuItem ("O programie");
         helpMenu.add(openHelp);
+        helpMenu.add(openDescription);
 
 
         // Dodanie akcji
@@ -51,9 +53,11 @@ public class MainFrame extends JFrame {
         openTxt.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             FileNameExtensionFilter filter = new FileNameExtensionFilter(
-                    "tylko .csrrg pliki", "csrrg");
-
+                    ".csrrg ", "csrrg");
+            fileChooser.setFileFilter(filter); // Set the filter
+            fileChooser.setAcceptAllFileFilterUsed(false); // Disable "All files" option
             fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+
             int result = fileChooser.showOpenDialog(this);
 
             if (result == JFileChooser.APPROVE_OPTION) {
@@ -66,7 +70,9 @@ public class MainFrame extends JFrame {
         openBin.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             FileNameExtensionFilter filter = new FileNameExtensionFilter(
-                    "tylko .bin pliki", "bin");
+                    ".bin ", "bin");
+            fileChooser.setFileFilter(filter); // Set the filter
+            fileChooser.setAcceptAllFileFilterUsed(false); // Disable "All files" option
             fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
             int result = fileChooser.showOpenDialog(this);
 
@@ -78,12 +84,24 @@ public class MainFrame extends JFrame {
         });
         openHelp.addActionListener(e -> {
             JOptionPane.showMessageDialog(this,
-                    "(opcjonalnie) podaj wartość liczby" +
-                            " przecięć grafu i marginesu, następnie kliknij przycisk Podziel-zostanie" +
-                            " wyświetlony podzielony graf, gdzie każda spójna część grafu będzie w " +
-                            " innym kolorze ",
+                    "Instrukcja obsługi programu:\n\n" +
+                            "1. Wybierz plik z grafem (.csrrg lub .bin)\n" +
+                            "2. (Opcjonalnie) Podaj wartość liczby przecięć grafu\n" +
+                            "3. (Opcjonalnie) Podaj wartość marginesu\n" +
+                            "4. Kliknij przycisk 'Podziel'\n\n" +
+                            "Po wykonaniu powyższych kroków zostanie wyświetlony\n" +
+                            "podzielony graf, gdzie każda spójna część grafu\n" +
+                            "będzie w innym kolorze.",
                     "O programie",
                     JOptionPane.INFORMATION_MESSAGE);
+        });
+        openDescription.addActionListener(e -> {
+            JOptionPane.showMessageDialog(this,"Celem aplikacji jest dokonanie określonej liczby podziałów w taki sposób aby przy każdym podziale liczba wierzchołków otrzymanych dwóch podgrafów była możliwie równa\n"+
+                    "(z dopuszczalnym marginesem różnicy) oraz aby liczba przeciętych krawędzi była minimalna.\n"+
+                    "Algorytm podziału grafu rozpoczyna się od wyznaczenia wierzchołka centralnego przy użyciu algorytmu Dijkstry, a następnie dzieli graf na dwie grupy metodą DFS,\n"+
+                    "dbając o równą liczebność.\n"+
+                    "Po podziale sprawdzana jest spójność obu grup — jeśli druga grupa nie jest spójna, zachowywana jest największa jej składowa, a pozostałe wierzchołki są przenoszone do pierwszej grupy.\n"+
+                    "Weryfikowany jest też margines wielkości między grupami. Na koniec z każdej grupy tworzony jest oddzielny podgraf zawierający tylko wewnętrzne połączenia.");
         });
 
 
