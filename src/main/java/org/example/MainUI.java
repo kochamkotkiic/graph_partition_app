@@ -1,5 +1,7 @@
 package org.example;
-
+import org.example.model.PartitionResult;
+import org.example.algorithm.GraphPartitioner;
+import org.example.model.Graph;
 import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.text.StyleContext;
@@ -7,12 +9,11 @@ import java.awt.*;
 import java.util.Locale;
 import java.awt.Color;
 
+
 public class MainUI {
     private JPanel MainPage;
     private JLabel pageTitle;
-    private JTextField margines;
     private JLabel instructionNumCuts;
-    private JTextField numCuts;
     private JLabel instructionMargines;
     private JSpinner spinnerNumCuts;
     private JSpinner spinnerMargines; // Add this field
@@ -23,6 +24,7 @@ public class MainUI {
     private JLabel questionIsGraphBalanced;
     private JLabel isGraphBalanced;  // pole klasy
     private JButton detailsButton;
+    private Graph graph;
 
     private void updateLabelColor(boolean balanced) {
         isGraphBalanced.setForeground(balanced ? Color.GREEN : Color.RED);
@@ -48,7 +50,68 @@ public class MainUI {
         // Konfiguracja spinnera dla marginesu
         SpinnerNumberModel spinnerMarginesModel = new SpinnerNumberModel(10, 0, 100, 1);
         spinnerMargines.setModel(spinnerMarginesModel); // Use the class field instead of finding by index
+        buttonPodziel.addActionListener(e -> onPodzielButtonClick());
+
     }
+
+    private void onPodzielButtonClick() {
+        try {
+            // Sprawdź czy mamy graf do podziału
+            if (graph == null) {
+                JOptionPane.showMessageDialog(MainPage,
+                        "Najpierw wygeneruj lub wczytaj graf",
+                        "Brak grafu",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // Pobierz wartości ze spinnerów
+            int margin = (Integer) spinnerMargines.getValue();
+            int cuts = (Integer) spinnerNumCuts.getValue();
+
+            PartitionResult result = GraphPartitioner.partition(graph, cuts, margin);
+
+            if (result != null) {
+                // Aktualizuj informacje o spójności
+                boolean allConnected = result.areAllGroupsConnected();
+                updateLabelColor(allConnected);
+
+                // Aktualizuj liczbę udanych przecięć
+                successfulCuts.setText(String.valueOf(result.getNumberOfGroups() - 1));
+
+                // Tutaj możesz dodać kod do aktualizacji widoku grafu
+                // oraz wypełnienia adjacencyTablePostPartition w DetailsUI
+
+            } else {
+                JOptionPane.showMessageDialog(MainPage,
+                        "Nie udało się podzielić grafu z podanymi parametrami",
+                        "Błąd podziału",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(MainPage,
+                    "Wystąpił błąd podczas podziału grafu: " + ex.getMessage(),
+                    "Błąd",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    // Metoda do ustawienia grafu (wywołaj ją po wygenerowaniu/wczytaniu grafu)
+    public void setGraph(Graph graph) {
+        this.graph = graph;
+
+        // Zaktualizuj stan UI
+        if (graph != null) {
+            buttonPodziel.setEnabled(true);
+            // Resetuj poprzednie wyniki
+            successfulCuts.setText("...");
+            isGraphBalanced.setText("...");
+        } else {
+            buttonPodziel.setEnabled(false);
+        }
+    }
+
 
     public JPanel getPanel() {
         return MainPage;
@@ -57,9 +120,7 @@ public class MainUI {
     private void createUIComponents() {
         MainPage = new JPanel();
         pageTitle = new JLabel();
-        margines = new JTextField();
         instructionNumCuts = new JLabel();
-        numCuts = new JTextField();
         instructionMargines = new JLabel();
         buttonPodziel = new JButton();
 
@@ -115,17 +176,17 @@ public class MainUI {
         gbc.anchor = GridBagConstraints.EAST;
         gbc.insets = new Insets(0, 0, 0, 20);
         panel1.add(instructionNumCuts, gbc);
-        final JButton button1 = new JButton();
-        button1.setBackground(new Color(-2192736));
-        button1.setForeground(new Color(-5306302));
-        button1.setText("Podziel\uD83D\uDE3C");
+        buttonPodziel = new JButton();
+        buttonPodziel.setBackground(new Color(-2192736));
+        buttonPodziel.setForeground(new Color(-5306302));
+        buttonPodziel.setText("Podziel\uD83D\uDE3C");
         gbc = new GridBagConstraints();
         gbc.gridx = 1;
         gbc.gridy = 9;
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.anchor = GridBagConstraints.NORTH;
-        panel1.add(button1, gbc);
+        panel1.add(buttonPodziel, gbc);
         instructionMargines = new JLabel();
         instructionMargines.setForeground(new Color(-4516742));
         instructionMargines.setText("margines %");

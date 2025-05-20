@@ -1,12 +1,86 @@
 package org.example;
-
+import org.example.model.PartitionResult;
+import org.example.model.Graph;
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.util.List;
+import java.util.Map;
 
 public class DetailsUI {
     private JPanel technicalPanel;
     private JButton backButton;
     private JTable adjacencyTable;
+    private JLabel text1;
+    private JLabel text2;
+    private JTable adjacencyTablePostPartition;
+    private Graph graph;
+    private PartitionResult partitionResult; // Add this field
+
+    // Modify constructor to accept both Graph and PartitionResult
+    public DetailsUI(Graph graph) {
+        this.graph = graph;
+        this.partitionResult = null; // Will be set later
+        initializeTables();
+    }
+
+    // Method to update with partition result when available
+    public void setPartitionResult(PartitionResult partitionResult) {
+        this.partitionResult = partitionResult;
+        initializeTables();
+    }
+
+
+
+private void initializeTables() {
+        // Initialize first table (original graph) - keep existing code
+        DefaultTableModel model1 = new DefaultTableModel(
+                new Object[]{"Wierzchołek", "Lista sąsiedztwa"}, 0);
+
+        if (graph != null) {
+            for (int i = 0; i < graph.getNumVertices(); i++) {
+                model1.addRow(new Object[]{
+                        i,
+                        graph.getNeighbors(i).toString()
+                });
+            }
+        }
+
+        adjacencyTable.setModel(model1);
+        adjacencyTable.setRowHeight(25);
+        adjacencyTable.getColumnModel().getColumn(0).setPreferredWidth(80);
+        adjacencyTable.getColumnModel().getColumn(1).setPreferredWidth(200);
+
+        // Initialize second table (after partition)
+        DefaultTableModel model2 = new DefaultTableModel(
+                new Object[]{"Grupa", "Wierzchołek", "Lista sąsiedztwa"}, 0);
+
+        if (partitionResult != null) {
+            for (int groupId = 0; groupId < partitionResult.getNumberOfGroups(); groupId++) {
+                Map<Integer, List<Integer>> groupAdjList = partitionResult.getGroupAdjacencyList(groupId);
+                for (Map.Entry<Integer, List<Integer>> entry : groupAdjList.entrySet()) {
+                    model2.addRow(new Object[]{
+                            groupId,
+                            entry.getKey(),
+                            entry.getValue().toString()
+                    });
+                }
+            }
+        }
+
+        adjacencyTablePostPartition.setModel(model2);
+        adjacencyTablePostPartition.setRowHeight(25);
+        adjacencyTablePostPartition.getColumnModel().getColumn(0).setPreferredWidth(60);
+        adjacencyTablePostPartition.getColumnModel().getColumn(1).setPreferredWidth(80);
+        adjacencyTablePostPartition.getColumnModel().getColumn(2).setPreferredWidth(200);
+    }
+
+    // Update method to handle both graph and partition result
+    public void updateData(Graph newGraph, PartitionResult newPartitionResult) {
+        this.graph = newGraph;
+        this.partitionResult = newPartitionResult;
+        initializeTables();
+    }
 
     public JPanel getPanel() {
         return technicalPanel;
@@ -39,14 +113,27 @@ public class DetailsUI {
         technicalPanel.add(backButton, new com.intellij.uiDesigner.core.GridConstraints(2, 2, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final com.intellij.uiDesigner.core.Spacer spacer1 = new com.intellij.uiDesigner.core.Spacer();
         technicalPanel.add(spacer1, new com.intellij.uiDesigner.core.GridConstraints(2, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
-        final JLabel label1 = new JLabel();
-        label1.setForeground(new Color(-4488797));
-        label1.setText("lista sąsiedztwa");
-        technicalPanel.add(label1, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        text1 = new JLabel();
+        text1.setForeground(new Color(-4488797));
+        text1.setText("lista sąsiedztwa przed podziałem");
+        technicalPanel.add(text1, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final com.intellij.uiDesigner.core.Spacer spacer2 = new com.intellij.uiDesigner.core.Spacer();
         technicalPanel.add(spacer2, new com.intellij.uiDesigner.core.GridConstraints(1, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_VERTICAL, 1, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        text2 = new JLabel();
+        text2.setForeground(new Color(-4488797));
+        text2.setText("lista sąsiedztwa po podziałe");
+        technicalPanel.add(text2, new com.intellij.uiDesigner.core.GridConstraints(0, 2, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JScrollPane scrollPane1 = new JScrollPane();
+        scrollPane1.setForeground(new Color(-1381654));
+        scrollPane1.setInheritsPopupMenu(false);
+        technicalPanel.add(scrollPane1, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         adjacencyTable = new JTable();
-        technicalPanel.add(adjacencyTable, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(150, 50), null, 0, false));
+        scrollPane1.setViewportView(adjacencyTable);
+        final JScrollPane scrollPane2 = new JScrollPane();
+        scrollPane2.setForeground(new Color(-1381654));
+        technicalPanel.add(scrollPane2, new com.intellij.uiDesigner.core.GridConstraints(1, 2, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        adjacencyTablePostPartition = new JTable();
+        scrollPane2.setViewportView(adjacencyTablePostPartition);
     }
 
     /**

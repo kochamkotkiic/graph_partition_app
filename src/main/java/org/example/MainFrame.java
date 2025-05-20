@@ -1,17 +1,32 @@
 package org.example;
-
+import org.example.model.PartitionResult;
+import org.example.algorithm.GraphPartitioner;
+import org.example.model.Graph;
+import org.example.io.GraphLoaderCsrrg;
+import org.example.io.GraphLoaderBin;
+import org.example.model.Graph;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
 
 public class MainFrame extends JFrame {
+    private PartitionResult partitionResult;
+    private DetailsUI detailsUI;  // This field exists but isn't being used properly
     private MainUI mainUI;
+    private Graph graph;
+
     public void switchToPanel(JPanel newPanel) {
         setContentPane(newPanel);
         revalidate(); // odświeżenie layoutu
         repaint();
     }
 
+    public void updatePartitionResult(PartitionResult newPartitionResult) {
+        this.partitionResult = newPartitionResult;
+        if (detailsUI != null) {
+            detailsUI.setPartitionResult(partitionResult);
+        }
+    }
     public MainFrame() {
         // Podstawowa konfiguracja okna
         setTitle("Aplikacja do podziału grafu");
@@ -19,8 +34,21 @@ public class MainFrame extends JFrame {
 
         // Utworzenie głównego interfejsu
         mainUI = new MainUI();
+        // In your constructor, modify the detailsButton listener:
         mainUI.getdetailsButton().addActionListener(e -> {
-            DetailsUI detailsUI = new DetailsUI();
+            if (graph == null) {
+                JOptionPane.showMessageDialog(this,
+                        "Proszę najpierw wczytać graf.",
+                        "Brak grafu",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // Store the instance in the class field instead of creating a local variable
+            this.detailsUI = new DetailsUI(graph);
+            if (partitionResult != null) {
+                detailsUI.setPartitionResult(partitionResult);
+            }
             switchToPanel(detailsUI.getPanel());
 
             detailsUI.getBackButton().addActionListener(ev -> {
@@ -68,8 +96,8 @@ public class MainFrame extends JFrame {
             JFileChooser fileChooser = new JFileChooser();
             FileNameExtensionFilter filter = new FileNameExtensionFilter(
                     ".csrrg ", "csrrg");
-            fileChooser.setFileFilter(filter); // Set the filter
-            fileChooser.setAcceptAllFileFilterUsed(false); // Disable "All files" option
+            fileChooser.setFileFilter(filter);
+            fileChooser.setAcceptAllFileFilterUsed(false);
             fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
             int result = fileChooser.showOpenDialog(this);
@@ -83,11 +111,21 @@ public class MainFrame extends JFrame {
                             JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-                JOptionPane.showMessageDialog(this,
-                        "Wczytano graf z pliku tekstowego:\n" +
-                                selectedFile.getName() + "\n\n",
-                        "Graf wczytany pomyślnie",
-                        JOptionPane.INFORMATION_MESSAGE);
+                try {
+                    // W obsłudze openTxt, po wczytaniu grafu:
+                    graph = GraphLoaderCsrrg.loadGraph(selectedFile.getPath());
+                    mainUI.setGraph(graph);  // Dodaj tę linię
+                    JOptionPane.showMessageDialog(this,
+                            "Wczytano graf z pliku tekstowego:\n" +
+                            selectedFile.getName() + "\n\n",
+                            "Graf wczytany pomyślnie",
+                            JOptionPane.INFORMATION_MESSAGE);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this,
+                            "Błąd podczas wczytywania grafu: " + ex.getMessage(),
+                            "Błąd",
+                            JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
 
@@ -110,11 +148,21 @@ public class MainFrame extends JFrame {
                             JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-                JOptionPane.showMessageDialog(this,
-                        "Wczytano graf z pliku binarnego:\n" +
-                                selectedFile.getName() + "\n\n",
-                        "Graf wczytany pomyślnie",
-                        JOptionPane.INFORMATION_MESSAGE);
+                try {
+                    // I podobnie w obsłudze openBin:
+                    graph = GraphLoaderBin.loadGraph(selectedFile.getPath());
+                    mainUI.setGraph(graph);  // Dodaj tę linię
+                    JOptionPane.showMessageDialog(this,
+                            "Wczytano graf z pliku binarnego:\n" +
+                                    selectedFile.getName() + "\n\n",
+                            "Graf wczytany pomyślnie",
+                            JOptionPane.INFORMATION_MESSAGE);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this,
+                            "Błąd podczas wczytywania grafu: " + ex.getMessage(),
+                            "Błąd",
+                            JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
         openHelp.addActionListener(e -> {
