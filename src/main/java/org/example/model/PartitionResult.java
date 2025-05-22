@@ -1,310 +1,316 @@
 package org.example.model;
+import org.example.algorithm.GraphPartitioner;
+import org.example.model.Graph;
+import java.util.*;
 
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-/**
- * Class representing the result of a graph partition operation
- */
 public class PartitionResult {
-    // Assignment of vertices to groups (mapping vertex ID to group ID)
-    private final int[] vertexGroupAssignment;
 
-    // Number of groups/partitions
-    private final int numberOfGroups;
+    public static class PartitionInfo {
+        private int cutNumber;
+        private int numComponents;
+        private Map<Integer, List<Integer>> componentVertices;
+        private boolean isBalanced;
+        private int marginPercent;
 
-    // Flag indicating whether each group is connected
-    private final boolean[] isGroupConnected;
+        public PartitionInfo(int cutNumber, int numComponents, int marginPercent) {
+            this.cutNumber = cutNumber;
+            this.numComponents = numComponents;
+            this.marginPercent = marginPercent;
+            this.componentVertices = new HashMap<>();
+            this.isBalanced = false;
+        }
 
-    // Adjacency list representation of the graph after partitioning
-    private final Map<Integer, List<Integer>>[] adjacencyListsAfterPartitioning;
+        // Getters
+        public int getCutNumber() { return cutNumber; }
+        public int getNumComponents() { return numComponents; }
+        public Map<Integer, List<Integer>> getComponentVertices() { return componentVertices; }
+        public boolean isBalanced() { return isBalanced; }
+        public int getMarginPercent() { return marginPercent; }
+
+        public void setBalanced(boolean balanced) { this.isBalanced = balanced; }
+        public void addComponentVertices(int componentId, List<Integer> vertices) {
+            this.componentVertices.put(componentId, new ArrayList<>(vertices));
+        }
+    }
+
+    // DODANA BRAKUJĄCA KLASA
+    public static class PartitioningResult {
+        private final List<PartitionInfo> partitionInfos;
+        private final List<Integer>[] originalNeighbors;
+
+        public PartitioningResult(List<PartitionInfo> partitionInfos, List<Integer>[] originalNeighbors) {
+            this.partitionInfos = new ArrayList<>(partitionInfos);
+            this.originalNeighbors = deepCopyNeighbors(originalNeighbors);
+        }
+
+        public List<PartitionInfo> getPartitionInfos() {
+            return new ArrayList<>(partitionInfos);
+        }
+
+        public List<Integer>[] getOriginalNeighbors() {
+            return deepCopyNeighbors(originalNeighbors);
+        }
+    }
+
+    // Usunąłem zduplikowaną metodę performPartitioningWithOriginal()
+    public static PartitioningResult performPartitioningWithOriginal(Graph graph, int numCuts, int marginPercent) {
+        List<Integer>[] originalNeighbors = deepCopyNeighbors(graph.getNeighbors());
+        List<PartitionInfo> results = performPartitioning(graph, numCuts, marginPercent);
+        return new PartitioningResult(results, originalNeighbors);
+    }
+
+
+
+    // Metoda do głębokiego kopiowania listy sąsiedztwa
+    private static List<Integer>[] deepCopyNeighbors(List<Integer>[] neighbors) {
+        if (neighbors == null) return null;
+
+        @SuppressWarnings("unchecked")
+        List<Integer>[] copy = new List[neighbors.length];
+        for (int i = 0; i < neighbors.length; i++) {
+            if (neighbors[i] != null) {
+                copy[i] = new ArrayList<>(neighbors[i]);
+            } else {
+                copy[i] = new ArrayList<>();
+            }
+        }
+        return copy;
+    }
 
     /**
-     * Creates a new partition result object
-     *
-     * @param numVertices Number of vertices in the graph
-     * @param numGroups Number of groups/partitions
+     * ORYGINALNA METODA - Performs recursive graph partitioning
+     * @param graph The graph to partition
+     * @param numCuts Number of cuts to perform
+     * @param marginPercent Margin percentage for balancing
+     * @return List of partition information for each successful cut
      */
-    @SuppressWarnings("unchecked")
-    public PartitionResult(int numVertices, int numGroups) {
-        this.vertexGroupAssignment = new int[numVertices];
-        this.numberOfGroups = numGroups;
-        this.isGroupConnected = new boolean[numGroups];
-        this.adjacencyListsAfterPartitioning = new HashMap[numGroups];
+    public static List<PartitionInfo> performPartitioning(Graph graph, int numCuts, int marginPercent) {
+        List<PartitionInfo> results = new ArrayList<>();
+        int successfulCuts = 0;
 
-        // Initialize adjacency lists for each group
-        for (int i = 0; i < numGroups; i++) {
-            adjacencyListsAfterPartitioning[i] = new HashMap<>();
+        System.out.println("=== STARTING GRAPH PARTITIONING ===");
+        System.out.printf("Target cuts: %d, Margin: %d%%\n\n", numCuts, marginPercent);
+
+        // Initial component analysis
+        GraphPartitioner.findConnectedComponents(graph);
+        System.out.printf("Initial graph has %d connected components\n", graph.getNumComponents());
+        printAdjacencyList(graph, "INITIAL GRAPH");
+        printComponentAnalysis(graph, 0);
+
+        boolean partitionSuccess = true;
+
+        while (successfulCuts < numCuts && partitionSuccess) {
+            System.out.printf("\n=== ATTEMPTING CUT %d ===\n", successfulCuts + 1);
+
+            // Store state before partition attempt
+            int componentsBefore = graph.getNumComponents();
+
+            // Attempt partition
+            partitionSuccess = GraphPartitioner.partitionGraph(graph, marginPercent);
+
+            if (partitionSuccess) {
+                successfulCuts++;
+
+                // Update components after partition
+                GraphPartitioner.findConnectedComponents(graph);
+
+                System.out.printf("✓ Cut %d successful! Components: %d -> %d\n",
+                        successfulCuts, componentsBefore, graph.getNumComponents());
+
+                // Create partition info
+                PartitionInfo partitionInfo = new PartitionInfo(successfulCuts, graph.getNumComponents(), marginPercent);
+
+                // Analyze and store component information
+                analyzeComponents(graph, partitionInfo);
+
+                // Print detailed results
+                printAdjacencyList(graph, "AFTER CUT " + successfulCuts);
+                printComponentAnalysis(graph, successfulCuts);
+                printBalanceAnalysis(partitionInfo);
+
+                results.add(partitionInfo);
+
+            } else {
+                System.err.printf("✗ Error: Failed to perform cut %d\n", successfulCuts + 1);
+                System.err.println("Reason: No suitable partition found or connectivity constraints not met");
+                break;
+            }
+        }
+
+        // Final summary
+        printFinalSummary(results, numCuts);
+
+        return results;
+    }
+
+    /**
+     * Analyzes components and determines if they are balanced
+     */
+    private static void analyzeComponents(Graph graph, PartitionInfo partitionInfo) {
+        int[] component = graph.getComponent();
+        Map<Integer, List<Integer>> componentMap = new HashMap<>();
+
+        // Group vertices by component
+        for (int i = 0; i < graph.getNumVertices(); i++) {
+            int comp = component[i];
+            componentMap.computeIfAbsent(comp, k -> new ArrayList<>()).add(i);
+        }
+
+        // Store component information
+        for (Map.Entry<Integer, List<Integer>> entry : componentMap.entrySet()) {
+            partitionInfo.addComponentVertices(entry.getKey(), entry.getValue());
+        }
+
+        // Check if components are balanced
+        if (componentMap.size() >= 2) {
+            List<Integer> sizes = new ArrayList<>();
+            for (List<Integer> vertices : componentMap.values()) {
+                sizes.add(vertices.size());
+            }
+
+            // Calculate balance
+            int minSize = Collections.min(sizes);
+            int maxSize = Collections.max(sizes);
+            double imbalance = ((double)(maxSize - minSize) / minSize) * 100;
+
+            partitionInfo.setBalanced(imbalance <= partitionInfo.getMarginPercent());
         }
     }
 
     /**
-     * Sets the group assignment for a vertex
-     *
-     * @param vertexId The vertex ID
-     * @param groupId The group ID to assign to the vertex
+     * Prints the adjacency list of the graph
      */
-    public void setVertexGroup(int vertexId, int groupId) {
-        if (groupId >= 0 && groupId < numberOfGroups) {
-            vertexGroupAssignment[vertexId] = groupId;
-        } else {
-            throw new IllegalArgumentException("Invalid group ID: " + groupId);
+    private static void printAdjacencyList(Graph graph, String title) {
+        System.out.printf("\n--- %s - ADJACENCY LIST ---\n", title);
+        List<Integer>[] neighbors = graph.getNeighbors();
+        int[] component = graph.getComponent();
+
+        for (int i = 0; i < graph.getNumVertices(); i++) {
+            System.out.printf("Vertex %d (Component %d): ", i, component[i]);
+
+            if (neighbors[i].isEmpty()) {
+                System.out.print("[]");
+            } else {
+                System.out.print("[");
+                for (int j = 0; j < neighbors[i].size(); j++) {
+                    System.out.print(neighbors[i].get(j));
+                    if (j < neighbors[i].size() - 1) {
+                        System.out.print(", ");
+                    }
+                }
+                System.out.print("]");
+            }
+            System.out.println();
         }
+        System.out.println();
     }
 
     /**
-     * Sets the vertex group assignments in bulk
-     *
-     * @param groupAssignments Array of group assignments
+     * Prints component analysis
      */
-    public void setVertexGroups(int[] groupAssignments) {
-        if (groupAssignments.length == vertexGroupAssignment.length) {
-            System.arraycopy(groupAssignments, 0, vertexGroupAssignment, 0, groupAssignments.length);
-        } else {
-            throw new IllegalArgumentException("Array length mismatch");
-        }
-    }
+    private static void printComponentAnalysis(Graph graph, int cutNumber) {
+        System.out.printf("--- COMPONENT ANALYSIS (After Cut %d) ---\n", cutNumber);
 
-    /**
-     * Sets whether a group is connected
-     *
-     * @param groupId The group ID
-     * @param isConnected True if the group is connected, false otherwise
-     */
-    public void setGroupConnected(int groupId, boolean isConnected) {
-        if (groupId >= 0 && groupId < numberOfGroups) {
-            isGroupConnected[groupId] = isConnected;
-        } else {
-            throw new IllegalArgumentException("Invalid group ID: " + groupId);
-        }
-    }
+        int[] component = graph.getComponent();
+        Map<Integer, List<Integer>> componentMap = new HashMap<>();
 
-    /**
-     * Adds an edge to the adjacency list of a group
-     *
-     * @param groupId The group ID
-     * @param fromVertex The source vertex
-     * @param toVertex The destination vertex
-     */
-    public void addEdgeToGroup(int groupId, int fromVertex, int toVertex) {
-        if (groupId >= 0 && groupId < numberOfGroups) {
-            Map<Integer, List<Integer>> adjacencyList = adjacencyListsAfterPartitioning[groupId];
-
-            // Add the edge from -> to
-            adjacencyList.computeIfAbsent(fromVertex, k -> new ArrayList<>()).add(toVertex);
-
-            // Add the edge to -> from (for undirected graph)
-            adjacencyList.computeIfAbsent(toVertex, k -> new ArrayList<>()).add(fromVertex);
-        } else {
-            throw new IllegalArgumentException("Invalid group ID: " + groupId);
-        }
-    }
-
-    /**
-     * Builds the adjacency lists for all groups based on the original graph
-     *
-     * @param originalGraph The original graph before partitioning
-     */
-    public void buildAdjacencyLists(Graph originalGraph) {
-        // Clear existing adjacency lists
-        for (int i = 0; i < numberOfGroups; i++) {
-            adjacencyListsAfterPartitioning[i].clear();
+        // Group vertices by component
+        for (int i = 0; i < graph.getNumVertices(); i++) {
+            int comp = component[i];
+            componentMap.computeIfAbsent(comp, k -> new ArrayList<>()).add(i);
         }
 
-        // For each vertex
-        for (int i = 0; i < originalGraph.getNumVertices(); i++) {
-            int sourceGroup = vertexGroupAssignment[i];
+        System.out.printf("Total components: %d\n", componentMap.size());
 
-            // Get all neighbors
-            List<Integer> neighbors = originalGraph.getNeighbors(i);
-            for (int neighbor : neighbors) {
-                int neighborGroup = vertexGroupAssignment[neighbor];
+        for (Map.Entry<Integer, List<Integer>> entry : componentMap.entrySet()) {
+            int compId = entry.getKey();
+            List<Integer> vertices = entry.getValue();
 
-                // Only add edges between vertices in the same group
-                if (sourceGroup == neighborGroup) {
-                    addEdgeToGroup(sourceGroup, i, neighbor);
+            System.out.printf("Component %d: %d vertices -> ", compId, vertices.size());
+            System.out.print("[");
+            for (int i = 0; i < vertices.size(); i++) {
+                System.out.print(vertices.get(i));
+                if (i < vertices.size() - 1) {
+                    System.out.print(", ");
                 }
             }
+            System.out.println("]");
         }
+        System.out.println();
     }
 
     /**
-     * Computes if each group is connected
-     *
-     * @param originalGraph The original graph before partitioning
+     * Prints balance analysis
      */
-    public void computeGroupConnectivity(Graph originalGraph) {
-        // For each group
-        for (int groupId = 0; groupId < numberOfGroups; groupId++) {
-            // Find vertices in this group
-            List<Integer> groupVertices = new ArrayList<>();
-            for (int i = 0; i < vertexGroupAssignment.length; i++) {
-                if (vertexGroupAssignment[i] == groupId) {
-                    groupVertices.add(i);
-                }
-            }
+    private static void printBalanceAnalysis(PartitionInfo partitionInfo) {
+        System.out.printf("--- BALANCE ANALYSIS (Cut %d) ---\n", partitionInfo.getCutNumber());
 
-            if (groupVertices.isEmpty()) {
-                isGroupConnected[groupId] = true;  // Empty groups are considered connected
-                continue;
-            }
+        Map<Integer, List<Integer>> components = partitionInfo.getComponentVertices();
+        List<Integer> sizes = new ArrayList<>();
 
-            // Perform DFS to check connectivity
-            boolean[] visited = new boolean[originalGraph.getNumVertices()];
-            dfs(originalGraph, groupVertices.get(0), visited, groupId);
-
-            // Check if all vertices in the group were visited
-            boolean allVisited = true;
-            for (int vertex : groupVertices) {
-                if (!visited[vertex]) {
-                    allVisited = false;
-                    break;
-                }
-            }
-
-            isGroupConnected[groupId] = allVisited;
+        for (Map.Entry<Integer, List<Integer>> entry : components.entrySet()) {
+            int size = entry.getValue().size();
+            sizes.add(size);
+            System.out.printf("Component %d size: %d\n", entry.getKey(), size);
         }
-    }
 
-    /**
-     * Helper method for DFS to check connectivity
-     */
-    private void dfs(Graph graph, int vertex, boolean[] visited, int groupId) {
-        visited[vertex] = true;
+        if (sizes.size() >= 2) {
+            int minSize = Collections.min(sizes);
+            int maxSize = Collections.max(sizes);
+            double imbalance = ((double)(maxSize - minSize) / minSize) * 100;
 
-        List<Integer> neighbors = graph.getNeighbors(vertex);
-        for (int neighbor : neighbors) {
-            if (!visited[neighbor] && vertexGroupAssignment[neighbor] == groupId) {
-                dfs(graph, neighbor, visited, groupId);
-            }
-        }
-    }
-
-    /**
-     * Gets the group assignment for a vertex
-     *
-     * @param vertexId The vertex ID
-     * @return The group ID
-     */
-    public int getVertexGroup(int vertexId) {
-        return vertexGroupAssignment[vertexId];
-    }
-
-    /**
-     * Gets all group assignments
-     *
-     * @return Array of group assignments
-     */
-    public int[] getVertexGroups() {
-        return vertexGroupAssignment;
-    }
-
-    /**
-     * Gets the number of groups
-     *
-     * @return Number of groups
-     */
-    public int getNumberOfGroups() {
-        return numberOfGroups;
-    }
-
-    /**
-     * Checks if a group is connected
-     *
-     * @param groupId The group ID
-     * @return True if the group is connected, false otherwise
-     */
-    public boolean isGroupConnected(int groupId) {
-        if (groupId >= 0 && groupId < numberOfGroups) {
-            return isGroupConnected[groupId];
+            System.out.printf("Size difference: %d (min: %d, max: %d)\n", maxSize - minSize, minSize, maxSize);
+            System.out.printf("Imbalance: %.2f%% (margin: %d%%)\n", imbalance, partitionInfo.getMarginPercent());
+            System.out.printf("Balanced: %s\n", partitionInfo.isBalanced() ? "✓ YES" : "✗ NO");
         } else {
-            throw new IllegalArgumentException("Invalid group ID: " + groupId);
+            System.out.println("Cannot assess balance - need at least 2 components");
         }
+        System.out.println();
     }
 
     /**
-     * Gets the adjacency list for a group
-     *
-     * @param groupId The group ID
-     * @return The adjacency list
+     * Prints final summary of all partitioning results
      */
-    public Map<Integer, List<Integer>> getGroupAdjacencyList(int groupId) {
-        if (groupId >= 0 && groupId < numberOfGroups) {
-            return adjacencyListsAfterPartitioning[groupId];
+    private static void printFinalSummary(List<PartitionInfo> results, int targetCuts) {
+        System.out.println("\n=== FINAL PARTITIONING SUMMARY ===");
+        System.out.printf("Target cuts: %d\n", targetCuts);
+        System.out.printf("Successful cuts: %d\n", results.size());
+        System.out.printf("Success rate: %.2f%%\n", (double)results.size() / targetCuts * 100);
+
+        if (!results.isEmpty()) {
+            PartitionInfo lastResult = results.get(results.size() - 1);
+            System.out.printf("Final components: %d\n", lastResult.getNumComponents());
+
+            System.out.println("\nCut History:");
+            for (PartitionInfo result : results) {
+                System.out.printf("  Cut %d: %d components, %s\n",
+                        result.getCutNumber(),
+                        result.getNumComponents(),
+                        result.isBalanced() ? "Balanced" : "Unbalanced");
+            }
+
+            System.out.println("\nFinal Component Sizes:");
+            PartitionInfo finalResult = results.get(results.size() - 1);
+            for (Map.Entry<Integer, List<Integer>> entry : finalResult.getComponentVertices().entrySet()) {
+                System.out.printf("  Component %d: %d vertices\n", entry.getKey(), entry.getValue().size());
+            }
+        }
+
+        System.out.println("=== END SUMMARY ===\n");
+    }
+
+    /**
+     * Helper method to run partitioning with default settings and print results
+     */
+    public static void runPartitioningDemo(Graph graph, int numCuts, int marginPercent) {
+        System.out.println("Starting graph partitioning demonstration...\n");
+
+        List<PartitionInfo> results = performPartitioning(graph, numCuts, marginPercent);
+
+        if (results.isEmpty()) {
+            System.out.println("No successful partitions were made.");
         } else {
-            throw new IllegalArgumentException("Invalid group ID: " + groupId);
+            System.out.printf("Partitioning completed with %d successful cuts.\n", results.size());
         }
-    }
-
-    /**
-     * Gets all vertices in a group
-     *
-     * @param groupId The group ID
-     * @return List of vertices in the group
-     */
-    public List<Integer> getVerticesInGroup(int groupId) {
-        List<Integer> result = new ArrayList<>();
-        for (int i = 0; i < vertexGroupAssignment.length; i++) {
-            if (vertexGroupAssignment[i] == groupId) {
-                result.add(i);
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Checks if all groups are connected
-     *
-     * @return True if all groups are connected, false otherwise
-     */
-    public boolean areAllGroupsConnected() {
-        for (boolean connected : isGroupConnected) {
-            if (!connected) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Returns a string representation of the partition result
-     *
-     * @return String representation
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Partition Result:\n");
-        sb.append("Number of groups: ").append(numberOfGroups).append("\n");
-
-        // Group connectivity
-        sb.append("Group connectivity:\n");
-        for (int i = 0; i < numberOfGroups; i++) {
-            sb.append("  Group ").append(i).append(": ")
-                    .append(isGroupConnected[i] ? "Connected" : "Disconnected").append("\n");
-        }
-
-        // Vertex assignments
-        sb.append("Vertex assignments:\n");
-        for (int i = 0; i < vertexGroupAssignment.length; i++) {
-            sb.append("  Vertex ").append(i).append(" -> Group ")
-                    .append(vertexGroupAssignment[i]).append("\n");
-        }
-
-        // Adjacency lists
-        sb.append("Adjacency lists after partitioning:\n");
-        for (int i = 0; i < numberOfGroups; i++) {
-            sb.append("  Group ").append(i).append(":\n");
-            Map<Integer, List<Integer>> adjList = adjacencyListsAfterPartitioning[i];
-            for (Map.Entry<Integer, List<Integer>> entry : adjList.entrySet()) {
-                sb.append("    Vertex ").append(entry.getKey()).append(" -> ")
-                        .append(entry.getValue()).append("\n");
-            }
-        }
-
-        return sb.toString();
     }
 }

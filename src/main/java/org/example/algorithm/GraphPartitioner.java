@@ -1,249 +1,86 @@
 package org.example.algorithm;
-
 import org.example.model.Graph;
 import org.example.model.PartitionResult;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
-/**
- * Main class for graph partitioning algorithm
- */
 public class GraphPartitioner {
-    private static final int MAX_VERTICES = 1000; // Adjust as needed
+    private static final int MAX_VERTICES = 4000;
     private static final int INF = Integer.MAX_VALUE;
 
-    // For storing maximum distances
-    private static int[] maxDistances;
+    // ====================== HELPER FUNCTIONS ======================
 
-    /**
-     * Partitions a graph into connected components
-     * @param graph The graph to partition
-     * @param cuts Number of desired cuts
-     * @param margin The maximum allowed imbalance between partitions (percentage)
-     * @return PartitionResult containing the partition information or null if partitioning failed
-     */
-    public static PartitionResult partition(Graph graph, int cuts, int margin) {
-        // Initialize max distances array
-        maxDistances = new int[graph.getNumVertices()];
+    public static void dfsMarkComponents(Graph graph, int v, boolean[] visited, int[] component, int currentComponent) {
+        visited[v] = true;
+        component[v] = currentComponent;
 
-        // Initialize components
-        findConnectedComponents(graph);
-
-        // Try to partition each component
-        PartitionResult result = new PartitionResult(graph.getNumVertices(), cuts + 1);
-        boolean success = partitionGraph(graph, margin, result);
-
-        if (success) {
-            // Build the final result
-            result.setVertexGroups(graph.getComponent());
-            result.buildAdjacencyLists(graph);
-            result.computeGroupConnectivity(graph);
-            return result;
-        } else {
-            return null;
+        List<Integer>[] neighbors = graph.getNeighbors();
+        for (int neighbor : neighbors[v]) {
+            if (!visited[neighbor]) {
+                dfsMarkComponents(graph, neighbor, visited, component, currentComponent);
+            }
         }
     }
 
-    /**
-     * Find connected components in the graph
-     */
-    private static void findConnectedComponents(Graph graph) {
-        boolean[] visited = new boolean[graph.getNumVertices()];
+    // ====================== CONNECTED COMPONENTS ANALYSIS ======================
+
+    public static void findConnectedComponents(Graph graph) {
+        boolean[] visited = new boolean[MAX_VERTICES];
+        int[] component = graph.getComponent();
         int numComponents = 0;
 
         for (int i = 0; i < graph.getNumVertices(); i++) {
             if (!visited[i]) {
-                DFS.markComponent(graph, i, visited, graph.getComponent(), numComponents);
+                dfsMarkComponents(graph, i, visited, component, numComponents);
                 numComponents++;
             }
         }
 
-        // We need to set the numComponents value, but there's no setter
-        // This is a potential issue in the design
+        graph.setNumComponents(numComponents);
     }
 
-    /**
-     * Attempts to partition the graph
-     */
-    private static boolean partitionGraph(Graph graph, int margin, PartitionResult result) {
-        // Determine the number of components
-        int numComponents = 0;
-        int[] component = graph.getComponent();
+    // ====================== DIJKSTRA ======================
+
+    public static void dijkstra(Graph graph, int start) {
+        int[] dist = new int[graph.getNumVertices()];
+        boolean[] visited = new boolean[graph.getNumVertices()];
+        List<Integer>[] neighbors = graph.getNeighbors();
+
+        Arrays.fill(dist, INF);
+        dist[start] = 0;
+
+        for (int count = 0; count < graph.getNumVertices() - 1; count++) {
+            int u = -1;
+            int minDist = INF;
+
+            for (int v = 0; v < graph.getNumVertices(); v++) {
+                if (!visited[v] && dist[v] < minDist) {
+                    minDist = dist[v];
+                    u = v;
+                }
+            }
+
+            if (u == -1) break;
+
+            visited[u] = true;
+            for (int v : neighbors[u]) {
+                if (!visited[v] && dist[u] + 1 < dist[v]) {
+                    dist[v] = dist[u] + 1;
+                }
+            }
+        }
+
+        int maxDist = 0;
         for (int i = 0; i < graph.getNumVertices(); i++) {
-            if (component[i] > numComponents) {
-                numComponents = component[i];
+            if (dist[i] != INF && dist[i] > maxDist) {
+                maxDist = dist[i];
             }
         }
-        numComponents++; // Adjust for 0-based indexing
-
-        // For each component, try to partition
-        for (int comp = 0; comp < numComponents; comp++) {
-            // Find central vertex in this component
-            int center = -1;
-            int minMaxDist = Integer.MAX_VALUE;
-
-            for (int i = 0; i < graph.getNumVertices(); i++) {
-                if (graph.getComponent()[i] == comp) {
-                    Dijkstra.calculateDistances(graph, i, maxDistances);
-                    if (maxDistances[i] < minMaxDist) {
-                        minMaxDist = maxDistances[i];
-                        center = i;
-                    }
-                }
-            }
-
-            if (center == -1) continue;
-
-            // Prepare lists for the two groups
-            List<Integer> group1 = new ArrayList<>();
-            List<Integer> group2 = new ArrayList<>();
-
-            // Count vertices in this component
-            int targetSize = 0;
-            for (int i = 0; i < graph.getNumVertices(); i++) {
-                if (graph.getComponent()[i] == comp) {
-                    targetSize++;
-                }
-            }
-
-            if (targetSize < 2) continue;
-
-            // Calculate margin based on component size
-            int actualMargin = margin * targetSize / 100;
-
-            // Target size for first group
-            targetSize /= 2;
-
-            // Use DFS to assign vertices to group1
-            boolean[] visited = new boolean[graph.getNumVertices()];
-            int[] stack = new int[MAX_VERTICES];
-            int stackSize = 0;
-
-            stack[stackSize++] = center;
-            visited[center] = true;
-            group1.add(center);
-            graph.getGroupAssignment()[center] = 1;
-
-            while (stackSize > 0 && group1.size() < targetSize) {
-                int current = stack[--stackSize];
-
-                int maxDist = -1;
-                int nextVertex = -1;
-
-                // Find next vertex with maximum distance
-                List<Integer> neighbors = graph.getNeighbors(current);
-                for (int neighbor : neighbors) {
-                    if (!visited[neighbor] && graph.getComponent()[neighbor] == comp) {
-                        if (maxDistances[neighbor] > maxDist) {
-                            maxDist = maxDistances[neighbor];
-                            nextVertex = neighbor;
-                        }
-                    }
-                }
-
-                if (nextVertex != -1) {
-                    stack[stackSize++] = current;
-                    stack[stackSize++] = nextVertex;
-                    visited[nextVertex] = true;
-                    group1.add(nextVertex);
-                    graph.getGroupAssignment()[nextVertex] = 1;
-                }
-            }
-
-            // Assign remaining vertices to group2
-            for (int i = 0; i < graph.getNumVertices(); i++) {
-                if (graph.getComponent()[i] == comp && !visited[i]) {
-                    group2.add(i);
-                    graph.getGroupAssignment()[i] = 2;
-                }
-            }
-
-            // Check if group2 is connected
-            boolean[] group2Included = new boolean[graph.getNumVertices()];
-            for (int v : group2) {
-                group2Included[v] = true;
-            }
-
-            if (!isComponentConnected(graph, group2Included)) {
-                // Find largest connected component in group2
-                boolean[] largestComponent = new boolean[graph.getNumVertices()];
-                int largestSize = 0;
-                boolean[] processed = new boolean[graph.getNumVertices()];
-
-                for (int v : group2) {
-                    if (!processed[v]) {
-                        boolean[] currentComponent = new boolean[graph.getNumVertices()];
-                        int currentSize = 0;
-                        int[] componentStack = new int[MAX_VERTICES];
-                        int cstackSize = 0;
-
-                        componentStack[cstackSize++] = v;
-                        currentComponent[v] = true;
-                        processed[v] = true;
-
-                        while (cstackSize > 0) {
-                            int cv = componentStack[--cstackSize];
-                            currentSize++;
-
-                            List<Integer> neighbors = graph.getNeighbors(cv);
-                            for (int neighbor : neighbors) {
-                                if (graph.getGroupAssignment()[neighbor] == 2 && !currentComponent[neighbor]) {
-                                    currentComponent[neighbor] = true;
-                                    processed[neighbor] = true;
-                                    componentStack[cstackSize++] = neighbor;
-                                }
-                            }
-                        }
-
-                        if (currentSize > largestSize) {
-                            largestSize = currentSize;
-                            System.arraycopy(currentComponent, 0, largestComponent, 0, graph.getNumVertices());
-                        }
-                    }
-                }
-
-                // Move non-largest component vertices to group1
-                List<Integer> newGroup2 = new ArrayList<>();
-                for (int v : group2) {
-                    if (largestComponent[v]) {
-                        newGroup2.add(v);
-                    } else {
-                        group1.add(v);
-                        graph.getGroupAssignment()[v] = 1;
-                    }
-                }
-                group2 = newGroup2;
-            }
-
-            // Check margin and balance if needed
-            int sizeDiff = Math.abs(group1.size() - group2.size());
-            if (sizeDiff > actualMargin) {
-                if (balanceGroups(graph, group1, group2, actualMargin)) {
-                    int newComponentId = numComponents + 1;
-                    splitGraph(graph, newComponentId);
-
-                    // Update the result with the new partitioning
-                    result.setVertexGroups(graph.getComponent());
-                    return true;
-                }
-            } else {
-                int newComponentId = numComponents + 1;
-                splitGraph(graph, newComponentId);
-
-                // Update the result with the new partitioning
-                result.setVertexGroups(graph.getComponent());
-                return true;
-            }
-        }
-
-        return false;
+        graph.getMaxDistances()[start] = maxDist;
     }
 
-    /**
-     * Checks if a component is connected
-     */
-    private static boolean isComponentConnected(Graph graph, boolean[] inComponent) {
+    // ====================== CONNECTIVITY FUNCTIONS ======================
+
+    public static boolean isComponentConnected(Graph graph, boolean[] inComponent) {
         int start = -1;
         for (int i = 0; i < graph.getNumVertices(); i++) {
             if (inComponent[i]) {
@@ -251,26 +88,24 @@ public class GraphPartitioner {
                 break;
             }
         }
-
         if (start == -1) return true;
 
-        boolean[] visited = new boolean[graph.getNumVertices()];
-        int[] stack = new int[MAX_VERTICES];
-        int stackSize = 0;
+        boolean[] visited = new boolean[MAX_VERTICES];
+        Stack<Integer> stack = new Stack<>();
         int visitedCount = 0;
+        List<Integer>[] neighbors = graph.getNeighbors();
 
-        stack[stackSize++] = start;
+        stack.push(start);
         visited[start] = true;
 
-        while (stackSize > 0) {
-            int current = stack[--stackSize];
+        while (!stack.isEmpty()) {
+            int current = stack.pop();
             visitedCount++;
 
-            List<Integer> neighbors = graph.getNeighbors(current);
-            for (int neighbor : neighbors) {
+            for (int neighbor : neighbors[current]) {
                 if (inComponent[neighbor] && !visited[neighbor]) {
                     visited[neighbor] = true;
-                    stack[stackSize++] = neighbor;
+                    stack.push(neighbor);
                 }
             }
         }
@@ -283,34 +118,45 @@ public class GraphPartitioner {
         return visitedCount == componentSize;
     }
 
-    /**
-     * Balances group sizes while maintaining connectivity
-     */
-    private static boolean balanceGroups(Graph graph, List<Integer> group1, List<Integer> group2, int margin) {
-        // Sort vertices by max distance
-        List<VertexInfo> vertices = new ArrayList<>();
+    // ====================== GROUP BALANCING ======================
 
+    static class VertexInfo {
+        int vertex;
+        int maxDist;
+
+        VertexInfo(int vertex, int maxDist) {
+            this.vertex = vertex;
+            this.maxDist = maxDist;
+        }
+    }
+
+    public static boolean balanceGroups(Graph graph, List<Integer> group1, List<Integer> group2, int margin) {
+        List<VertexInfo> vertices = new ArrayList<>();
+        int[] maxDistances = graph.getMaxDistances();
+        int[] groupAssignment = graph.getGroupAssignment();
+
+        // Prepare sorted list of vertices from group 1
         for (int v : group1) {
             vertices.add(new VertexInfo(v, maxDistances[v]));
         }
 
-        // Sort by max distance
-        vertices.sort((a, b) -> Integer.compare(a.maxDist, b.maxDist));
+        // Sort by max distance (ascending)
+        vertices.sort(Comparator.comparingInt(v -> v.maxDist));
 
-        // Try to move vertices from group1 to group2
-        for (VertexInfo vInfo : vertices) {
-            int v = vInfo.vertex;
+        // Try to move vertices starting from smallest max_distance
+        for (VertexInfo vertexInfo : vertices) {
+            int v = vertexInfo.vertex;
 
-            // Check if vertex is still in group1
+            // Check if vertex is still in group 1
             if (!group1.contains(v)) continue;
 
-            // Temporarily move to group2
-            graph.getGroupAssignment()[v] = 2;
+            // Temporarily move to group 2
+            groupAssignment[v] = 2;
 
-            // Check group1 connectivity without this vertex
+            // Check group 1 connectivity without this vertex
             boolean group1Connected = true;
             if (group1.size() > 1) {
-                boolean[] group1Included = new boolean[graph.getNumVertices()];
+                boolean[] group1Included = new boolean[MAX_VERTICES];
                 for (int vertex : group1) {
                     if (vertex != v) {
                         group1Included[vertex] = true;
@@ -319,10 +165,10 @@ public class GraphPartitioner {
                 group1Connected = isComponentConnected(graph, group1Included);
             }
 
-            // Check group2 connectivity with this vertex
+            // Check group 2 connectivity with new vertex
             boolean group2Connected = true;
             if (!group2.isEmpty()) {
-                boolean[] group2Included = new boolean[graph.getNumVertices()];
+                boolean[] group2Included = new boolean[MAX_VERTICES];
                 for (int vertex : group2) {
                     group2Included[vertex] = true;
                 }
@@ -330,12 +176,12 @@ public class GraphPartitioner {
                 group2Connected = isComponentConnected(graph, group2Included);
             }
 
-            // Restore original assignment before decision
-            graph.getGroupAssignment()[v] = 1;
+            // Restore original assignment before making decision
+            groupAssignment[v] = 1;
 
             if (group1Connected && group2Connected) {
-                // Move vertex from group1 to group2
-                graph.getGroupAssignment()[v] = 2;
+                // Perform actual transfer
+                groupAssignment[v] = 2;
                 group2.add(v);
                 group1.remove(Integer.valueOf(v));
 
@@ -353,31 +199,195 @@ public class GraphPartitioner {
         return false;
     }
 
-    /**
-     * Splits the graph by removing edges between groups
-     */
-    private static void splitGraph(Graph graph, int newComponentId) {
-        // Update component assignments
-        for (int i = 0; i < graph.getNumVertices(); i++) {
-            if (graph.getGroupAssignment()[i] == 2) {
-                graph.getComponent()[i] = newComponentId;
+    // ====================== MAIN PARTITIONING LOGIC ======================
+
+    public static boolean partitionGraph(Graph graph, int margin) {
+        int[] component = graph.getComponent();
+        int[] maxDistances = graph.getMaxDistances();
+        int[] groupAssignment = graph.getGroupAssignment();
+        List<Integer>[] neighbors = graph.getNeighbors();
+
+        // Try partitioning for each component
+        for (int comp = 0; comp < graph.getNumComponents(); comp++) {
+            // Find central vertex in component
+            int center = -1;
+            int minMaxDist = Integer.MAX_VALUE;
+
+            for (int i = 0; i < graph.getNumVertices(); i++) {
+                if (component[i] == comp) {
+                    dijkstra(graph, i);
+                    if (maxDistances[i] < minMaxDist) {
+                        minMaxDist = maxDistances[i];
+                        center = i;
+                    }
+                }
+            }
+
+            if (center == -1) continue;
+
+            List<Integer> group1 = new ArrayList<>();
+            List<Integer> group2 = new ArrayList<>();
+
+            // Assign vertices to groups using DFS
+            boolean[] visited = new boolean[MAX_VERTICES];
+            Stack<Integer> stack = new Stack<>();
+            int targetSize = 0;
+
+            // Count vertices in this component
+            for (int i = 0; i < graph.getNumVertices(); i++) {
+                if (component[i] == comp) {
+                    targetSize++;
+                }
+            }
+
+            if (targetSize < 2) continue;
+
+            margin = margin * targetSize / 100;
+            targetSize /= 2;
+
+            stack.push(center);
+            visited[center] = true;
+            group1.add(center);
+            groupAssignment[center] = 1;
+
+            while (!stack.isEmpty() && group1.size() < targetSize) {
+                int current = stack.pop();
+
+                int maxDist = -1;
+                int nextVertex = -1;
+                for (int neighbor : neighbors[current]) {
+                    if (!visited[neighbor] && component[neighbor] == comp) {
+                        if (maxDistances[neighbor] > maxDist) {
+                            maxDist = maxDistances[neighbor];
+                            nextVertex = neighbor;
+                        }
+                    }
+                }
+
+                if (nextVertex != -1) {
+                    stack.push(current);
+                    stack.push(nextVertex);
+                    visited[nextVertex] = true;
+                    group1.add(nextVertex);
+                    groupAssignment[nextVertex] = 1;
+                }
+            }
+
+            // Rest goes to group 2
+            for (int i = 0; i < graph.getNumVertices(); i++) {
+                if (component[i] == comp && !visited[i]) {
+                    group2.add(i);
+                    groupAssignment[i] = 2;
+                }
+            }
+
+            // Check group 2 connectivity
+            boolean[] group2Included = new boolean[MAX_VERTICES];
+            for (int vertex : group2) {
+                group2Included[vertex] = true;
+            }
+
+            if (!isComponentConnected(graph, group2Included)) {
+                // Find largest connected part in group 2
+                boolean[] largestComponent = new boolean[MAX_VERTICES];
+                int largestSize = 0;
+                boolean[] processed = new boolean[MAX_VERTICES];
+
+                for (int v : group2) {
+                    if (!processed[v]) {
+                        boolean[] currentComponent = new boolean[MAX_VERTICES];
+                        int currentSize = 0;
+                        Stack<Integer> componentStack = new Stack<>();
+
+                        componentStack.push(v);
+                        currentComponent[v] = true;
+                        processed[v] = true;
+
+                        while (!componentStack.isEmpty()) {
+                            int cv = componentStack.pop();
+                            currentSize++;
+
+                            for (int neighbor : neighbors[cv]) {
+                                if (groupAssignment[neighbor] == 2 && !currentComponent[neighbor]) {
+                                    currentComponent[neighbor] = true;
+                                    processed[neighbor] = true;
+                                    componentStack.push(neighbor);
+                                }
+                            }
+                        }
+
+                        if (currentSize > largestSize) {
+                            largestSize = currentSize;
+                            System.arraycopy(currentComponent, 0, largestComponent, 0, MAX_VERTICES);
+                        }
+                    }
+                }
+
+                // Move vertices outside largest component to group 1
+                List<Integer> newGroup2 = new ArrayList<>();
+                for (int v : group2) {
+                    if (largestComponent[v]) {
+                        newGroup2.add(v);
+                    } else {
+                        group1.add(v);
+                        groupAssignment[v] = 1;
+                    }
+                }
+                group2 = newGroup2;
+            }
+
+            // Check margin condition and balance if necessary
+            int sizeDiff = Math.abs(group1.size() - group2.size());
+            if (sizeDiff > margin) {
+                if (balanceGroups(graph, group1, group2, margin)) {
+                    splitGraph(graph);
+                    return true;
+                }
+            } else {
+                splitGraph(graph);
+                return true;
             }
         }
 
-        // Reset group assignments
-        Arrays.fill(graph.getGroupAssignment(), 0);
+        return false;
     }
 
-    /**
-     * Helper class to store vertex information for sorting
-     */
-    private static class VertexInfo {
-        int vertex;
-        int maxDist;
+    public static void splitGraph(Graph graph) {
+        int newComponentId = graph.getNumComponents(); // new component
+        int[] component = graph.getComponent();
+        int[] groupAssignment = graph.getGroupAssignment();
+        List<Integer>[] neighbors = graph.getNeighbors();
+        int[] neighborCount = graph.getNeighborCount();
 
-        VertexInfo(int vertex, int maxDist) {
-            this.vertex = vertex;
-            this.maxDist = maxDist;
+        // Update component assignments
+        for (int i = 0; i < graph.getNumVertices(); i++) {
+            if (groupAssignment[i] == 2) {
+                component[i] = newComponentId;
+            }
         }
+        graph.setNumComponents(graph.getNumComponents() + 1);
+
+        // Remove edges between groups
+        for (int i = 0; i < graph.getNumVertices(); i++) {
+            List<Integer> newNeighbors = new ArrayList<>();
+
+            for (int neighbor : neighbors[i]) {
+                // Keep only edges within the same group
+                if (groupAssignment[i] == groupAssignment[neighbor]) {
+                    newNeighbors.add(neighbor);
+                }
+            }
+
+            // Update neighbor list
+            neighbors[i].clear();
+            neighbors[i].addAll(newNeighbors);
+            neighborCount[i] = newNeighbors.size();
+        }
+
+        // Reset group assignments
+        Arrays.fill(groupAssignment, 0);
+    }
+    public static List<PartitionResult.PartitionInfo> performPartitioning(Graph graph, int numCuts, int marginPercent) {
+        return PartitionResult.performPartitioning(graph, numCuts, marginPercent);
     }
 }

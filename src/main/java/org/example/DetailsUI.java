@@ -1,9 +1,11 @@
 package org.example;
 import org.example.model.PartitionResult;
 import org.example.model.Graph;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -15,33 +17,48 @@ public class DetailsUI {
     private JLabel text2;
     private JTable adjacencyTablePostPartition;
     private Graph graph;
-    private PartitionResult partitionResult; // Add this field
+    private List<PartitionResult.PartitionInfo> partitionResults;  // Changed type
+    private List<Integer>[] originalNeighbors;
 
-    // Modify constructor to accept both Graph and PartitionResult
-    public DetailsUI(Graph graph) {
+    public DetailsUI(Graph graph, List<Integer>[] originalNeighborsList) {
         this.graph = graph;
-        this.partitionResult = null; // Will be set later
+        this.partitionResults = null;
+        // Zapisz kopię oryginalnej listy sąsiedztwa
+        this.originalNeighbors = new ArrayList[graph.getNumVertices()];
+        for (int i = 0; i < graph.getNumVertices(); i++) {
+            this.originalNeighbors[i] = new ArrayList<>(originalNeighborsList[i]);
+        }
         initializeTables();
     }
 
-    // Method to update with partition result when available
-    public void setPartitionResult(PartitionResult partitionResult) {
-        this.partitionResult = partitionResult;
+    public void setPartitionResults(List<PartitionResult.PartitionInfo> results) {
+        this.partitionResults = results;
         initializeTables();
     }
+    private List<Integer>[] deepCopyNeighbors(List<Integer>[] neighbors) {
+        if (neighbors == null || graph == null) return null;
 
-
-
-private void initializeTables() {
-        // Initialize first table (original graph) - keep existing code
+        @SuppressWarnings("unchecked")
+        List<Integer>[] copy = new List[graph.getNumVertices()];
+        for (int i = 0; i < graph.getNumVertices(); i++) {
+            if (neighbors[i] != null) {
+                copy[i] = new ArrayList<>(neighbors[i]);
+            } else {
+                copy[i] = new ArrayList<>();
+            }
+        }
+        return copy;
+    }
+    /*private void initializeTables() {
+        // Initialize first table (original graph)
         DefaultTableModel model1 = new DefaultTableModel(
                 new Object[]{"Wierzchołek", "Lista sąsiedztwa"}, 0);
 
-        if (graph != null) {
+        if (originalNeighbors != null && graph != null) {
             for (int i = 0; i < graph.getNumVertices(); i++) {
                 model1.addRow(new Object[]{
                         i,
-                        graph.getNeighbors(i).toString()
+                        originalNeighbors[i].toString()
                 });
             }
         }
@@ -53,16 +70,24 @@ private void initializeTables() {
 
         // Initialize second table (after partition)
         DefaultTableModel model2 = new DefaultTableModel(
-                new Object[]{"Grupa", "Wierzchołek", "Lista sąsiedztwa"}, 0);
+                new Object[]{"Cięcie", "Grupa", "Wierzchołki", "Lista sąsiedztwa"}, 0);
 
-        if (partitionResult != null) {
-            for (int groupId = 0; groupId < partitionResult.getNumberOfGroups(); groupId++) {
-                Map<Integer, List<Integer>> groupAdjList = partitionResult.getGroupAdjacencyList(groupId);
-                for (Map.Entry<Integer, List<Integer>> entry : groupAdjList.entrySet()) {
+        if (partitionResults != null && !partitionResults.isEmpty()) {
+            // Get the last partition result to show final state
+            PartitionResult.PartitionInfo lastResult = partitionResults.get(partitionResults.size() - 1);
+            List<Integer>[] currentNeighbors = graph.getNeighbors(); // Aktualna lista po partycjonowaniu
+
+            // For each component in the final partition
+            for (Map.Entry<Integer, List<Integer>> entry : lastResult.getComponentVertices().entrySet()) {
+                int groupId = entry.getKey();
+                List<Integer> vertices = entry.getValue();
+
+                for (Integer vertex : vertices) {
                     model2.addRow(new Object[]{
+                            lastResult.getCutNumber(),
                             groupId,
-                            entry.getKey(),
-                            entry.getValue().toString()
+                            vertex,
+                            currentNeighbors[vertex].toString()
                     });
                 }
             }
@@ -71,17 +96,82 @@ private void initializeTables() {
         adjacencyTablePostPartition.setModel(model2);
         adjacencyTablePostPartition.setRowHeight(25);
         adjacencyTablePostPartition.getColumnModel().getColumn(0).setPreferredWidth(60);
-        adjacencyTablePostPartition.getColumnModel().getColumn(1).setPreferredWidth(80);
-        adjacencyTablePostPartition.getColumnModel().getColumn(2).setPreferredWidth(200);
-    }
+        adjacencyTablePostPartition.getColumnModel().getColumn(1).setPreferredWidth(60);
+        adjacencyTablePostPartition.getColumnModel().getColumn(2).setPreferredWidth(80);
+        adjacencyTablePostPartition.getColumnModel().getColumn(3).setPreferredWidth(200);
+    }*/
 
-    // Update method to handle both graph and partition result
-    public void updateData(Graph newGraph, PartitionResult newPartitionResult) {
+
+    // Nowa metoda do aktualizacji z zachowaniem oryginalnego stanu
+    public void updateData(Graph newGraph, List<PartitionResult.PartitionInfo> results, List<Integer>[] originalNeighbors) {
         this.graph = newGraph;
-        this.partitionResult = newPartitionResult;
+        this.partitionResults = results;
+        this.originalNeighbors = deepCopyNeighbors(originalNeighbors);
         initializeTables();
     }
+    private void initializeTables() {
+        showOriginalGraphTable();
+        showPartitionedGraphTable();
+    }
 
+    private void showOriginalGraphTable() {
+        DefaultTableModel model = new DefaultTableModel(
+                new Object[]{"Wierzchołek", "Lista sąsiedztwa"}, 0);
+
+        if (originalNeighbors != null && graph != null) {
+            for (int i = 0; i < graph.getNumVertices(); i++) {
+                StringBuilder adjacencyStr = new StringBuilder();
+                List<Integer> neighbors = originalNeighbors[i];
+
+                if (neighbors.isEmpty()) {
+                    adjacencyStr.append("[]");
+                } else {
+                    adjacencyStr.append("[");
+                    for (int j = 0; j < neighbors.size(); j++) {
+                        adjacencyStr.append(neighbors.get(j));
+                        if (j < neighbors.size() - 1) {
+                            adjacencyStr.append(", ");
+                        }
+                    }
+                    adjacencyStr.append("]");
+                }
+
+                model.addRow(new Object[]{
+                        String.format("Vertex %d", i),
+                        adjacencyStr.toString()
+                });
+            }
+        }
+
+        adjacencyTable.setModel(model);
+        configureTable(adjacencyTable, new int[]{80, 200});
+    }
+
+    private void showPartitionedGraphTable() {
+        DefaultTableModel model = new DefaultTableModel(
+                new Object[]{"Grupa", "Wierzchołek", "Lista sąsiedztwa"}, 0);
+
+        if (partitionResults != null && !partitionResults.isEmpty()) {
+            PartitionResult.PartitionInfo lastResult = partitionResults.get(partitionResults.size() - 1);
+
+            for (Map.Entry<Integer, List<Integer>> entry : lastResult.getComponentVertices().entrySet()) {
+                int groupId = entry.getKey();
+                List<Integer> vertices = entry.getValue();
+
+                // Dla każdego wierzchołka w grupie dodaj osobny wiersz
+                for (int vertex : vertices) {
+                    model.addRow(new Object[]{
+                            groupId,
+                            vertex,
+                            graph.getNeighbors()[vertex].toString()
+                    });
+                }
+            }
+        }
+
+        adjacencyTablePostPartition.setModel(model);
+        configureTable(adjacencyTablePostPartition, new int[]{60, 80, 200});
+    }
     public JPanel getPanel() {
         return technicalPanel;
     }
@@ -121,7 +211,7 @@ private void initializeTables() {
         technicalPanel.add(spacer2, new com.intellij.uiDesigner.core.GridConstraints(1, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_VERTICAL, 1, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         text2 = new JLabel();
         text2.setForeground(new Color(-4488797));
-        text2.setText("lista sąsiedztwa po podziałe");
+        text2.setText("lista sąsiedztwa po podziale");
         technicalPanel.add(text2, new com.intellij.uiDesigner.core.GridConstraints(0, 2, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JScrollPane scrollPane1 = new JScrollPane();
         scrollPane1.setForeground(new Color(-1381654));
@@ -142,5 +232,23 @@ private void initializeTables() {
     public JComponent $$$getRootComponent$$$() {
         return technicalPanel;
     }
+    public void setOriginalNeighbors(List<Integer>[] neighbors) {
+        if (neighbors == null || graph == null) return;
+    
+        this.originalNeighbors = new ArrayList[graph.getNumVertices()];
+        for (int i = 0; i < graph.getNumVertices(); i++) {
+            this.originalNeighbors[i] = new ArrayList<>(neighbors[i]);
+        }
+        initializeTables();
+    }
 
+    private void configureTable(JTable table, int[] columnWidths) {
+        table.setRowHeight(25);
+        for (int i = 0; i < columnWidths.length && i < table.getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i).setPreferredWidth(columnWidths[i]);
+        }
+        // Opcjonalne ustawienia dla lepszego wyglądu
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+        table.getTableHeader().setReorderingAllowed(false);
+    }
 }

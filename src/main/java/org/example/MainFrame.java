@@ -8,12 +8,16 @@ import org.example.model.Graph;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
+import java.util.List;
+import java.util.ArrayList;
 
 public class MainFrame extends JFrame {
-    private PartitionResult partitionResult;
+    private List<PartitionResult.PartitionInfo> partitionResults;  // Changed type
     private DetailsUI detailsUI;  // This field exists but isn't being used properly
     private MainUI mainUI;
     private Graph graph;
+    private List<Integer>[] originalNeighbors; // Zapisuje oryginalną listę sąsiedztwa
+
 
     public void switchToPanel(JPanel newPanel) {
         setContentPane(newPanel);
@@ -21,10 +25,25 @@ public class MainFrame extends JFrame {
         repaint();
     }
 
-    public void updatePartitionResult(PartitionResult newPartitionResult) {
-        this.partitionResult = newPartitionResult;
+    // Zmień metodę updatePartitionResult
+    public void updatePartitionResult(List<PartitionResult.PartitionInfo> newResults) {
+        this.partitionResults = newResults;
         if (detailsUI != null) {
-            detailsUI.setPartitionResult(partitionResult);
+            detailsUI.setPartitionResults(partitionResults);
+            // Jeśli masz oryginalne dane, przekaż je
+            if (originalNeighbors != null) {
+                detailsUI.setOriginalNeighbors(originalNeighbors);
+            }
+        }
+    }
+    // NOWA metoda do obsługi wyniku z oryginalnymi danymi
+    public void updatePartitionResultWithOriginal(PartitionResult.PartitioningResult result) {
+        this.partitionResults = result.getPartitionInfos();
+        this.originalNeighbors = result.getOriginalNeighbors();
+
+        if (detailsUI != null) {
+            detailsUI.setPartitionResults(partitionResults);
+            detailsUI.setOriginalNeighbors(originalNeighbors);
         }
     }
     public MainFrame() {
@@ -33,7 +52,7 @@ public class MainFrame extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // Utworzenie głównego interfejsu
-        mainUI = new MainUI();
+        mainUI = new MainUI(this);
         // In your constructor, modify the detailsButton listener:
         mainUI.getdetailsButton().addActionListener(e -> {
             if (graph == null) {
@@ -44,10 +63,11 @@ public class MainFrame extends JFrame {
                 return;
             }
 
-            // Store the instance in the class field instead of creating a local variable
-            this.detailsUI = new DetailsUI(graph);
-            if (partitionResult != null) {
-                detailsUI.setPartitionResult(partitionResult);
+            // Użyj zachowanej oryginalnej listy sąsiedztwa zamiast tworzyć nową kopię
+            this.detailsUI = new DetailsUI(graph, originalNeighbors);  // użyj zapisanej originalNeighbors
+
+            if (partitionResults != null) {
+                detailsUI.setPartitionResults(partitionResults);
             }
             switchToPanel(detailsUI.getPanel());
 
@@ -55,6 +75,7 @@ public class MainFrame extends JFrame {
                 switchToPanel(mainUI.getPanel());
             });
         });
+
         switchToPanel(mainUI.getPanel());
 
 
@@ -112,15 +133,18 @@ public class MainFrame extends JFrame {
                     return;
                 }
                 try {
-                    // W obsłudze openTxt, po wczytaniu grafu:
                     graph = GraphLoaderCsrrg.loadGraph(selectedFile.getPath());
-                    mainUI.setGraph(graph);  // Dodaj tę linię
+                    // Zachowaj oryginalną listę sąsiedztwa zaraz po wczytaniu
+                    originalNeighbors = graph.copyNeighbors();
+                    // NIE twórz tutaj obiektu DetailsUI - zostanie on utworzony przy kliknięciu przycisku Details
+                    mainUI.setGraph(graph);
                     JOptionPane.showMessageDialog(this,
                             "Wczytano graf z pliku tekstowego:\n" +
-                            selectedFile.getName() + "\n\n",
+                                    selectedFile.getName() + "\n\n",
                             "Graf wczytany pomyślnie",
                             JOptionPane.INFORMATION_MESSAGE);
-                } catch (Exception ex) {
+                }
+                catch (Exception ex) {
                     JOptionPane.showMessageDialog(this,
                             "Błąd podczas wczytywania grafu: " + ex.getMessage(),
                             "Błąd",
@@ -149,15 +173,18 @@ public class MainFrame extends JFrame {
                     return;
                 }
                 try {
-                    // I podobnie w obsłudze openBin:
                     graph = GraphLoaderBin.loadGraph(selectedFile.getPath());
-                    mainUI.setGraph(graph);  // Dodaj tę linię
+                    // Zachowaj oryginalną listę sąsiedztwa zaraz po wczytaniu
+                    originalNeighbors = graph.copyNeighbors();
+                    // NIE twórz tutaj obiektu DetailsUI
+                    mainUI.setGraph(graph);
                     JOptionPane.showMessageDialog(this,
                             "Wczytano graf z pliku binarnego:\n" +
                                     selectedFile.getName() + "\n\n",
                             "Graf wczytany pomyślnie",
                             JOptionPane.INFORMATION_MESSAGE);
-                } catch (Exception ex) {
+                }
+                catch (Exception ex) {
                     JOptionPane.showMessageDialog(this,
                             "Błąd podczas wczytywania grafu: " + ex.getMessage(),
                             "Błąd",

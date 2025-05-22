@@ -1,6 +1,7 @@
 package org.example;
 import org.example.model.PartitionResult;
 import org.example.algorithm.GraphPartitioner;
+import org.example.MainFrame;
 import org.example.model.Graph;
 import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
@@ -8,6 +9,9 @@ import javax.swing.text.StyleContext;
 import java.awt.*;
 import java.util.Locale;
 import java.awt.Color;
+import java.awt.Font;
+import java.util.Map;
+import java.util.List;
 
 
 public class MainUI {
@@ -25,6 +29,8 @@ public class MainUI {
     private JLabel isGraphBalanced;  // pole klasy
     private JButton detailsButton;
     private Graph graph;
+    private MainFrame mainFrame;
+    private DetailsUI detailsUI;  // lub dostęp przez mainFrame.getDetailsUI()
 
     private void updateLabelColor(boolean balanced) {
         isGraphBalanced.setForeground(balanced ? Color.GREEN : Color.RED);
@@ -36,7 +42,8 @@ public class MainUI {
         return detailsButton;
     }
 
-    public MainUI() {
+    public MainUI(MainFrame mainFrame) {
+        this.mainFrame=mainFrame;
         $$$setupUI$$$();
         if (MainPage == null) {
             MainPage = new JPanel();
@@ -56,7 +63,6 @@ public class MainUI {
 
     private void onPodzielButtonClick() {
         try {
-            // Sprawdź czy mamy graf do podziału
             if (graph == null) {
                 JOptionPane.showMessageDialog(MainPage,
                         "Najpierw wygeneruj lub wczytaj graf",
@@ -65,22 +71,26 @@ public class MainUI {
                 return;
             }
 
-            // Pobierz wartości ze spinnerów
             int margin = (Integer) spinnerMargines.getValue();
             int cuts = (Integer) spinnerNumCuts.getValue();
 
-            PartitionResult result = GraphPartitioner.partition(graph, cuts, margin);
+            // Get results using the static method
+            List<PartitionResult.PartitionInfo> results = PartitionResult.performPartitioning(graph, cuts, margin);
 
-            if (result != null) {
-                // Aktualizuj informacje o spójności
-                boolean allConnected = result.areAllGroupsConnected();
-                updateLabelColor(allConnected);
+            if (results != null && !results.isEmpty()) {
+                // Update UI with results
+                mainFrame.updatePartitionResult(results);
 
-                // Aktualizuj liczbę udanych przecięć
-                successfulCuts.setText(String.valueOf(result.getNumberOfGroups() - 1));
+                // Get the final partition result
 
-                // Tutaj możesz dodać kod do aktualizacji widoku grafu
-                // oraz wypełnienia adjacencyTablePostPartition w DetailsUI
+                PartitionResult.PartitionInfo lastResult = results.get(results.size() - 1);
+
+                // Update successful cuts count
+                successfulCuts.setText(String.valueOf(results.size()));
+
+                // Update balance status
+                isGraphBalanced.setText(lastResult.isBalanced() ? "TAK" : "NIE");
+                isGraphBalanced.setForeground(lastResult.isBalanced() ? Color.GREEN : Color.RED);
 
             } else {
                 JOptionPane.showMessageDialog(MainPage,
@@ -90,6 +100,7 @@ public class MainUI {
             }
 
         } catch (Exception ex) {
+            ex.printStackTrace();
             JOptionPane.showMessageDialog(MainPage,
                     "Wystąpił błąd podczas podziału grafu: " + ex.getMessage(),
                     "Błąd",
@@ -97,20 +108,24 @@ public class MainUI {
         }
     }
 
-    // Metoda do ustawienia grafu (wywołaj ją po wygenerowaniu/wczytaniu grafu)
+    // Method to set the graph (call it after generating/loading the graph)
     public void setGraph(Graph graph) {
         this.graph = graph;
-
-        // Zaktualizuj stan UI
+    
+        // Update UI state
         if (graph != null) {
             buttonPodziel.setEnabled(true);
-            // Resetuj poprzednie wyniki
+            // Reset previous results
             successfulCuts.setText("...");
             isGraphBalanced.setText("...");
+            isGraphBalanced.setForeground(Color.BLACK); // Reset color
         } else {
             buttonPodziel.setEnabled(false);
         }
     }
+
+
+
 
 
     public JPanel getPanel() {
