@@ -58,7 +58,7 @@ public class MainUI {
         SpinnerNumberModel spinnerMarginesModel = new SpinnerNumberModel(10, 0, 100, 1);
         spinnerMargines.setModel(spinnerMarginesModel); // Use the class field instead of finding by index
         buttonPodziel.addActionListener(e -> onPodzielButtonClick());
-
+        resetujWidokButton.addActionListener(e -> onResetujWidokButtonClick());
     }
 
     private void onPodzielButtonClick() {
@@ -108,6 +108,26 @@ public class MainUI {
         }
     }
 
+    private void onResetujWidokButtonClick() {
+        try {
+            if(graph != null) {
+                mainFrame.updatePartitionResult(null);
+                successfulCuts.setText("...");
+                isGraphBalanced.setText("...");
+                isGraphBalanced.setForeground(Color.BLACK);
+                graph = null;
+                buttonPodziel.setEnabled(false);
+                detailsButton.setEnabled(false);  // Dezaktywuj przycisk szczegółów
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(MainPage,
+                    "Nie wybrano żadnego grafu:" + ex.getMessage(),
+                    "Błąd",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     // Method to set the graph (call it after generating/loading the graph)
     public void setGraph(Graph graph) {
         this.graph = graph;
@@ -115,16 +135,16 @@ public class MainUI {
         // Update UI state
         if (graph != null) {
             buttonPodziel.setEnabled(true);
+            detailsButton.setEnabled(true);  // Aktywuj przycisk szczegółów
             // Reset previous results
             successfulCuts.setText("...");
             isGraphBalanced.setText("...");
             isGraphBalanced.setForeground(Color.BLACK); // Reset color
         } else {
             buttonPodziel.setEnabled(false);
+            detailsButton.setEnabled(false);  // Dezaktywuj przycisk szczegółów
         }
     }
-
-
 
 
 

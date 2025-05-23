@@ -28,14 +28,20 @@ public class MainFrame extends JFrame {
     // Zmień metodę updatePartitionResult
     public void updatePartitionResult(List<PartitionResult.PartitionInfo> newResults) {
         this.partitionResults = newResults;
+        if (newResults == null) {  // Jeśli resetujemy wyniki
+            this.originalNeighbors = null;  // Resetuj również originalNeighbors
+            this.graph = null;  // Resetuj graf
+            this.detailsUI = null;  // Resetuj detailsUI
+
+        }
         if (detailsUI != null) {
             detailsUI.setPartitionResults(partitionResults);
-            // Jeśli masz oryginalne dane, przekaż je
-            if (originalNeighbors != null) {
-                detailsUI.setOriginalNeighbors(originalNeighbors);
-            }
+        // Jeśli mamy oryginalne dane, przekaż je
+        if (originalNeighbors != null) {
+            detailsUI.setOriginalNeighbors(originalNeighbors);
         }
     }
+}
     // NOWA metoda do obsługi wyniku z oryginalnymi danymi
     public void updatePartitionResultWithOriginal(PartitionResult.PartitioningResult result) {
         this.partitionResults = result.getPartitionInfos();
