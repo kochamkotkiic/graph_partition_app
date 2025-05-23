@@ -7,59 +7,104 @@ import org.example.io.GraphLoaderBin;
 import org.example.model.Graph;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.*;
 import java.io.File;
 import java.util.List;
 import java.util.ArrayList;
+import org.example.model.GraphException;
 
 public class MainFrame extends JFrame {
-    private List<PartitionResult.PartitionInfo> partitionResults;  // Changed type
-    private DetailsUI detailsUI;  // This field exists but isn't being used properly
+    private List<PartitionResult.PartitionInfo> partitionResults;
+    private DetailsUI detailsUI;
     private MainUI mainUI;
     private Graph graph;
-    private List<Integer>[] originalNeighbors; // Zapisuje oryginalną listę sąsiedztwa
-
+    private List<Integer>[] originalNeighbors;
+    private PartitionUI partitionUI;
+    
+    // Dodaj pola dla CardLayout
+    private JPanel contentPanel;
+    private CardLayout cardLayout;
+    
+    // Stałe do identyfikacji paneli
+    private static final String MAIN_PANEL = "MAIN_PANEL";
+    private static final String DETAILS_PANEL = "DETAILS_PANEL";
+    private static final String PARTITION_PANEL = "PARTITION_PANEL";
 
     public void switchToPanel(JPanel newPanel) {
-        setContentPane(newPanel);
-        revalidate(); // odświeżenie layoutu
+        // Znajdź nazwę panelu
+        String panelName = MAIN_PANEL; // domyślnie
+        if (newPanel == detailsUI.getPanel()) {
+            panelName = DETAILS_PANEL;
+        } else if (newPanel == partitionUI.getPanel()) {
+            panelName = PARTITION_PANEL;
+        }
+        
+        cardLayout.show(contentPanel, panelName);
+        revalidate();
         repaint();
     }
 
-    // Zmień metodę updatePartitionResult
+    // Zostawiamy tylko jedną wersję metody updatePartitionResult
     public void updatePartitionResult(List<PartitionResult.PartitionInfo> newResults) {
         this.partitionResults = newResults;
-        if (newResults == null) {  // Jeśli resetujemy wyniki
-            this.originalNeighbors = null;  // Resetuj również originalNeighbors
-            this.graph = null;  // Resetuj graf
-            this.detailsUI = null;  // Resetuj detailsUI
-
+        if (newResults == null) {
+            this.originalNeighbors = null;
+            this.graph = null;
+            this.detailsUI = null;
+            if (this.partitionUI != null) {
+                this.partitionUI.clearVisualization();
+            }
+            this.partitionUI = null;
+        } else {
+            // Utwórz nową instancję PartitionUI jeśli nie istnieje
+            if (this.partitionUI == null) {
+                this.partitionUI = new PartitionUI();
+                contentPanel.add(partitionUI.getPanel(), PARTITION_PANEL);
+            }
+            // Aktualizuj wizualizację w PartitionUI
+            this.partitionUI.updateVisualization(newResults);
         }
+        
+        // Aktualizacja detailsUI
         if (detailsUI != null) {
             detailsUI.setPartitionResults(partitionResults);
-        // Jeśli mamy oryginalne dane, przekaż je
-        if (originalNeighbors != null) {
-            detailsUI.setOriginalNeighbors(originalNeighbors);
+            if (originalNeighbors != null) {
+                detailsUI.setOriginalNeighbors(originalNeighbors);
+            }
         }
     }
-}
-    // NOWA metoda do obsługi wyniku z oryginalnymi danymi
-    public void updatePartitionResultWithOriginal(PartitionResult.PartitioningResult result) {
-        this.partitionResults = result.getPartitionInfos();
-        this.originalNeighbors = result.getOriginalNeighbors();
 
-        if (detailsUI != null) {
-            detailsUI.setPartitionResults(partitionResults);
-            detailsUI.setOriginalNeighbors(originalNeighbors);
-        }
-    }
+
     public MainFrame() {
-        // Podstawowa konfiguracja okna
         setTitle("Aplikacja do podziału grafu");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // Utworzenie głównego interfejsu
+        // Inicjalizacja CardLayout
+        cardLayout = new CardLayout();
+        contentPanel = new JPanel(cardLayout);
+        setContentPane(contentPanel);
+
+        // Inicjalizacja komponentów UI
         mainUI = new MainUI(this);
-        // In your constructor, modify the detailsButton listener:
+
+        // Dodanie paneli do CardLayout
+        contentPanel.add(mainUI.getPanel(), MAIN_PANEL);
+
+        // Konfiguracja przycisków nawigacyjnych
+        setupNavigation();
+
+        // Utworzenie i dodanie menu
+        createMenu();
+
+        setSize(800, 600);
+        setLocationRelativeTo(null);
+        
+        // Pokaż główny panel na starcie
+        cardLayout.show(contentPanel, MAIN_PANEL);
+    }
+
+    private void setupNavigation() {
+        // Przycisk Details
         mainUI.getdetailsButton().addActionListener(e -> {
             if (graph == null) {
                 JOptionPane.showMessageDialog(this,
@@ -69,28 +114,36 @@ public class MainFrame extends JFrame {
                 return;
             }
 
-            // Użyj zachowanej oryginalnej listy sąsiedztwa zamiast tworzyć nową kopię
-            this.detailsUI = new DetailsUI(graph, originalNeighbors);  // użyj zapisanej originalNeighbors
-
+            this.detailsUI = new DetailsUI(graph, originalNeighbors);
             if (partitionResults != null) {
                 detailsUI.setPartitionResults(partitionResults);
             }
-            switchToPanel(detailsUI.getPanel());
+            
+            // Dodaj panel details do CardLayout jeśli jeszcze nie został dodany
+            contentPanel.add(detailsUI.getPanel(), DETAILS_PANEL);
+            cardLayout.show(contentPanel, DETAILS_PANEL);
 
-            detailsUI.getBackButton().addActionListener(ev -> {
-                switchToPanel(mainUI.getPanel());
-            });
+            detailsUI.getBackButton().addActionListener(ev -> 
+                cardLayout.show(contentPanel, MAIN_PANEL));
         });
 
-        switchToPanel(mainUI.getPanel());
+        // Przycisk Partition
+        mainUI.getpostPartitionButton().addActionListener(e -> {
+            if (graph == null) {
+                JOptionPane.showMessageDialog(this,
+                        "Proszę najpierw wczytać graf.",
+                        "Brak grafu",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            
+            // Dodaj panel partition do CardLayout jeśli jeszcze nie został dodany
+            contentPanel.add(partitionUI.getPanel(), PARTITION_PANEL);
+            cardLayout.show(contentPanel, PARTITION_PANEL);
 
-
-        // Utworzenie i dodanie menu
-        createMenu();
-
-        // Ustawienie rozmiaru i wyświetlenie okna
-        setSize(800, 600);
-        setLocationRelativeTo(null); // centrowanie okna
+            partitionUI.getpartitionBackButton().addActionListener(ev -> 
+                cardLayout.show(contentPanel, MAIN_PANEL));
+        });
     }
 
     private void createMenu() {
@@ -140,6 +193,25 @@ public class MainFrame extends JFrame {
                 }
                 try {
                     graph = GraphLoaderCsrrg.loadGraph(selectedFile.getPath());
+                } catch (GraphException ge) {
+                    JOptionPane.showMessageDialog(this,
+                            "Błąd podczas tworzenia struktury grafu:\n" + ge.getMessage(),
+                            "Błąd struktury grafu",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                } catch (NumberFormatException nfe) {
+                    JOptionPane.showMessageDialog(this,
+                            "Błąd podczas parsowania liczb w pliku: " + nfe.getMessage(),
+                            "Błąd formatu danych",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this,
+                            "Nieoczekiwany błąd podczas wczytywania pliku: " + ex.getMessage(),
+                            "Błąd wczytywania",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
                     // Zachowaj oryginalną listę sąsiedztwa zaraz po wczytaniu
                     originalNeighbors = graph.copyNeighbors();
                     // NIE twórz tutaj obiektu DetailsUI - zostanie on utworzony przy kliknięciu przycisku Details
@@ -149,13 +221,7 @@ public class MainFrame extends JFrame {
                                     selectedFile.getName() + "\n\n",
                             "Graf wczytany pomyślnie",
                             JOptionPane.INFORMATION_MESSAGE);
-                }
-                catch (Exception ex) {
-                    JOptionPane.showMessageDialog(this,
-                            "Błąd podczas wczytywania grafu: " + ex.getMessage(),
-                            "Błąd",
-                            JOptionPane.ERROR_MESSAGE);
-                }
+
             }
         });
 
@@ -223,4 +289,6 @@ public class MainFrame extends JFrame {
 
 
     }
+
+
 }

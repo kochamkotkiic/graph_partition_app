@@ -318,7 +318,7 @@ public class GraphPartitioner {
 
                         if (currentSize > largestSize) {
                             largestSize = currentSize;
-                            System.arraycopy(currentComponent, 0, largestComponent, 0, MAX_VERTICES);
+                            System.arraycopy(currentComponent, 0, largestComponent, 0,MAX_VERTICES);
                         }
                     }
                 }

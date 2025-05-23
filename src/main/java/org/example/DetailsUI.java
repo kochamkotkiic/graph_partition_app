@@ -35,6 +35,7 @@ public class DetailsUI {
         this.partitionResults = results;
         initializeTables();
     }
+
     private List<Integer>[] deepCopyNeighbors(List<Integer>[] neighbors) {
         if (neighbors == null || graph == null) return null;
 
@@ -49,58 +50,6 @@ public class DetailsUI {
         }
         return copy;
     }
-    /*private void initializeTables() {
-        // Initialize first table (original graph)
-        DefaultTableModel model1 = new DefaultTableModel(
-                new Object[]{"Wierzchołek", "Lista sąsiedztwa"}, 0);
-
-        if (originalNeighbors != null && graph != null) {
-            for (int i = 0; i < graph.getNumVertices(); i++) {
-                model1.addRow(new Object[]{
-                        i,
-                        originalNeighbors[i].toString()
-                });
-            }
-        }
-
-        adjacencyTable.setModel(model1);
-        adjacencyTable.setRowHeight(25);
-        adjacencyTable.getColumnModel().getColumn(0).setPreferredWidth(80);
-        adjacencyTable.getColumnModel().getColumn(1).setPreferredWidth(200);
-
-        // Initialize second table (after partition)
-        DefaultTableModel model2 = new DefaultTableModel(
-                new Object[]{"Cięcie", "Grupa", "Wierzchołki", "Lista sąsiedztwa"}, 0);
-
-        if (partitionResults != null && !partitionResults.isEmpty()) {
-            // Get the last partition result to show final state
-            PartitionResult.PartitionInfo lastResult = partitionResults.get(partitionResults.size() - 1);
-            List<Integer>[] currentNeighbors = graph.getNeighbors(); // Aktualna lista po partycjonowaniu
-
-            // For each component in the final partition
-            for (Map.Entry<Integer, List<Integer>> entry : lastResult.getComponentVertices().entrySet()) {
-                int groupId = entry.getKey();
-                List<Integer> vertices = entry.getValue();
-
-                for (Integer vertex : vertices) {
-                    model2.addRow(new Object[]{
-                            lastResult.getCutNumber(),
-                            groupId,
-                            vertex,
-                            currentNeighbors[vertex].toString()
-                    });
-                }
-            }
-        }
-
-        adjacencyTablePostPartition.setModel(model2);
-        adjacencyTablePostPartition.setRowHeight(25);
-        adjacencyTablePostPartition.getColumnModel().getColumn(0).setPreferredWidth(60);
-        adjacencyTablePostPartition.getColumnModel().getColumn(1).setPreferredWidth(60);
-        adjacencyTablePostPartition.getColumnModel().getColumn(2).setPreferredWidth(80);
-        adjacencyTablePostPartition.getColumnModel().getColumn(3).setPreferredWidth(200);
-    }*/
-
 
     // Nowa metoda do aktualizacji z zachowaniem oryginalnego stanu
     public void updateData(Graph newGraph, List<PartitionResult.PartitionInfo> results, List<Integer>[] originalNeighbors) {
@@ -109,6 +58,7 @@ public class DetailsUI {
         this.originalNeighbors = deepCopyNeighbors(originalNeighbors);
         initializeTables();
     }
+
     private void initializeTables() {
         showOriginalGraphTable();
         showPartitionedGraphTable();
@@ -172,6 +122,7 @@ public class DetailsUI {
         adjacencyTablePostPartition.setModel(model);
         configureTable(adjacencyTablePostPartition, new int[]{60, 80, 200});
     }
+
     public JPanel getPanel() {
         return technicalPanel;
     }
@@ -200,7 +151,7 @@ public class DetailsUI {
         backButton = new JButton();
         backButton.setForeground(new Color(-4488797));
         backButton.setText("Powrót do ekranu głównego");
-        technicalPanel.add(backButton, new com.intellij.uiDesigner.core.GridConstraints(2, 2, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        technicalPanel.add(backButton, new com.intellij.uiDesigner.core.GridConstraints(2, 2, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_EAST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final com.intellij.uiDesigner.core.Spacer spacer1 = new com.intellij.uiDesigner.core.Spacer();
         technicalPanel.add(spacer1, new com.intellij.uiDesigner.core.GridConstraints(2, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         text1 = new JLabel();
@@ -211,7 +162,7 @@ public class DetailsUI {
         technicalPanel.add(spacer2, new com.intellij.uiDesigner.core.GridConstraints(1, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_VERTICAL, 1, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         text2 = new JLabel();
         text2.setForeground(new Color(-4488797));
-        text2.setText("lista sąsiedztwa po podziale");
+        text2.setText("lista sąsiedztwa po podziałe");
         technicalPanel.add(text2, new com.intellij.uiDesigner.core.GridConstraints(0, 2, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JScrollPane scrollPane1 = new JScrollPane();
         scrollPane1.setForeground(new Color(-1381654));
@@ -232,9 +183,10 @@ public class DetailsUI {
     public JComponent $$$getRootComponent$$$() {
         return technicalPanel;
     }
+
     public void setOriginalNeighbors(List<Integer>[] neighbors) {
         if (neighbors == null || graph == null) return;
-    
+
         this.originalNeighbors = new ArrayList[graph.getNumVertices()];
         for (int i = 0; i < graph.getNumVertices(); i++) {
             this.originalNeighbors[i] = new ArrayList<>(neighbors[i]);

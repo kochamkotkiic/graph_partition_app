@@ -2,7 +2,7 @@
 <form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="org.example.MainUI">
   <grid id="27dc6" binding="MainPage" custom-create="true" layout-manager="GridBagLayout">
     <constraints>
-      <xy x="20" y="3" width="1333" height="494"/>
+      <xy x="24" y="1" width="1329" height="508"/>
     </constraints>
     <properties>
       <autoscrolls value="true"/>
@@ -14,10 +14,12 @@
     <children>
       <grid id="a8a" binding="graphPanelPlaceholder" layout-manager="GridBagLayout">
         <constraints>
-          <grid row="2" column="0" row-span="7" col-span="2" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-          <gridbag weightx="0.0" weighty="1.0"/>
+          <grid row="1" column="0" row-span="11" col-span="2" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="9.0" weighty="0.0"/>
         </constraints>
-        <properties/>
+        <properties>
+          <preferredSize width="0" height="0"/>
+        </properties>
         <border type="none"/>
         <children/>
       </grid>
@@ -123,12 +125,6 @@
           </hspacer>
         </children>
       </grid>
-      <hspacer id="db3cd">
-        <constraints>
-          <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-          <gridbag top="0" left="1050" bottom="0" right="0" weightx="0.0" weighty="0.0"/>
-        </constraints>
-      </hspacer>
       <component id="56548" class="javax.swing.JLabel" binding="pageTitle">
         <constraints>
           <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="1" fill="0" indent="0" use-parent-layout="false">
@@ -168,7 +164,7 @@
       </component>
       <component id="215c2" class="javax.swing.JButton" binding="resetujWidokButton" default-binding="true">
         <constraints>
-          <grid row="8" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="2" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="11" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="2" fill="1" indent="0" use-parent-layout="false"/>
           <gridbag weightx="0.0" weighty="0.0"/>
         </constraints>
         <properties>
@@ -199,7 +195,7 @@
       </component>
       <component id="32b82" class="javax.swing.JButton" binding="detailsButton">
         <constraints>
-          <grid row="6" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="7" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
           <gridbag top="0" left="0" bottom="0" right="20" weightx="0.0" weighty="0.0"/>
         </constraints>
         <properties>
@@ -207,6 +203,35 @@
           <text value="Szczegóły techniczne"/>
         </properties>
       </component>
+      <component id="f05" class="javax.swing.JButton" binding="postPartitionButton">
+        <constraints>
+          <grid row="9" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag top="0" left="0" bottom="0" right="20" weightx="0.0" weighty="0.0"/>
+        </constraints>
+        <properties>
+          <foreground color="-4488797"/>
+          <horizontalAlignment value="0"/>
+          <text value="wizualizacja grafu po podziale"/>
+        </properties>
+      </component>
+      <vspacer id="a6793">
+        <constraints>
+          <grid row="8" column="2" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.0" weighty="0.0"/>
+        </constraints>
+      </vspacer>
+      <vspacer id="d301b">
+        <constraints>
+          <grid row="6" column="2" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.0" weighty="0.0"/>
+        </constraints>
+      </vspacer>
+      <vspacer id="3c6e">
+        <constraints>
+          <grid row="10" column="2" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.0" weighty="0.0"/>
+        </constraints>
+      </vspacer>
     </children>
   </grid>
 </form>

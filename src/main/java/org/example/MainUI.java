@@ -1,7 +1,5 @@
 package org.example;
 import org.example.model.PartitionResult;
-import org.example.algorithm.GraphPartitioner;
-import org.example.MainFrame;
 import org.example.model.Graph;
 import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
@@ -10,7 +8,6 @@ import java.awt.*;
 import java.util.Locale;
 import java.awt.Color;
 import java.awt.Font;
-import java.util.Map;
 import java.util.List;
 
 
@@ -28,6 +25,7 @@ public class MainUI {
     private JLabel questionIsGraphBalanced;
     private JLabel isGraphBalanced;  // pole klasy
     private JButton detailsButton;
+    private JButton postPartitionButton;
     private Graph graph;
     private MainFrame mainFrame;
     private DetailsUI detailsUI;  // lub dostęp przez mainFrame.getDetailsUI()
@@ -42,8 +40,12 @@ public class MainUI {
         return detailsButton;
     }
 
+    public JButton getpostPartitionButton() {
+        return postPartitionButton;
+    }
+
     public MainUI(MainFrame mainFrame) {
-        this.mainFrame=mainFrame;
+        this.mainFrame = mainFrame;
         $$$setupUI$$$();
         if (MainPage == null) {
             MainPage = new JPanel();
@@ -110,7 +112,7 @@ public class MainUI {
 
     private void onResetujWidokButtonClick() {
         try {
-            if(graph != null) {
+            if (graph != null) {
                 mainFrame.updatePartitionResult(null);
                 successfulCuts.setText("...");
                 isGraphBalanced.setText("...");
@@ -118,6 +120,7 @@ public class MainUI {
                 graph = null;
                 buttonPodziel.setEnabled(false);
                 detailsButton.setEnabled(false);  // Dezaktywuj przycisk szczegółów
+                postPartitionButton.setEnabled(false);
             }
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -131,7 +134,7 @@ public class MainUI {
     // Method to set the graph (call it after generating/loading the graph)
     public void setGraph(Graph graph) {
         this.graph = graph;
-    
+
         // Update UI state
         if (graph != null) {
             buttonPodziel.setEnabled(true);
@@ -145,7 +148,6 @@ public class MainUI {
             detailsButton.setEnabled(false);  // Dezaktywuj przycisk szczegółów
         }
     }
-
 
 
     public JPanel getPanel() {
@@ -181,13 +183,14 @@ public class MainUI {
         MainPage.setRequestFocusEnabled(false);
         graphPanelPlaceholder = new JPanel();
         graphPanelPlaceholder.setLayout(new GridBagLayout());
+        graphPanelPlaceholder.setPreferredSize(new Dimension(0, 0));
         GridBagConstraints gbc;
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 2;
+        gbc.gridy = 1;
         gbc.gridwidth = 2;
-        gbc.gridheight = 7;
-        gbc.weighty = 1.0;
+        gbc.gridheight = 11;
+        gbc.weightx = 9.0;
         gbc.fill = GridBagConstraints.BOTH;
         MainPage.add(graphPanelPlaceholder, gbc);
         final JPanel panel1 = new JPanel();
@@ -288,13 +291,6 @@ public class MainUI {
         gbc.gridy = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel1.add(spacer6, gbc);
-        final JPanel spacer7 = new JPanel();
-        gbc = new GridBagConstraints();
-        gbc.gridx = 1;
-        gbc.gridy = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(0, 1050, 0, 0);
-        MainPage.add(spacer7, gbc);
         pageTitle = new JLabel();
         Font pageTitleFont = this.$$$getFont$$$(null, -1, 20, pageTitle.getFont());
         if (pageTitleFont != null) pageTitle.setFont(pageTitleFont);
@@ -333,7 +329,7 @@ public class MainUI {
         resetujWidokButton.setText("resetuj widok");
         gbc = new GridBagConstraints();
         gbc.gridx = 2;
-        gbc.gridy = 8;
+        gbc.gridy = 11;
         gbc.anchor = GridBagConstraints.SOUTH;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         MainPage.add(resetujWidokButton, gbc);
@@ -360,10 +356,38 @@ public class MainUI {
         detailsButton.setText("Szczegóły techniczne");
         gbc = new GridBagConstraints();
         gbc.gridx = 2;
-        gbc.gridy = 6;
+        gbc.gridy = 7;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(0, 0, 0, 20);
         MainPage.add(detailsButton, gbc);
+        postPartitionButton = new JButton();
+        postPartitionButton.setForeground(new Color(-4488797));
+        postPartitionButton.setHorizontalAlignment(0);
+        postPartitionButton.setText("wizualizacja grafu po podziale");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 2;
+        gbc.gridy = 9;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(0, 0, 0, 20);
+        MainPage.add(postPartitionButton, gbc);
+        final JPanel spacer7 = new JPanel();
+        gbc = new GridBagConstraints();
+        gbc.gridx = 2;
+        gbc.gridy = 8;
+        gbc.fill = GridBagConstraints.VERTICAL;
+        MainPage.add(spacer7, gbc);
+        final JPanel spacer8 = new JPanel();
+        gbc = new GridBagConstraints();
+        gbc.gridx = 2;
+        gbc.gridy = 6;
+        gbc.fill = GridBagConstraints.VERTICAL;
+        MainPage.add(spacer8, gbc);
+        final JPanel spacer9 = new JPanel();
+        gbc = new GridBagConstraints();
+        gbc.gridx = 2;
+        gbc.gridy = 10;
+        gbc.fill = GridBagConstraints.VERTICAL;
+        MainPage.add(spacer9, gbc);
     }
 
     /**
