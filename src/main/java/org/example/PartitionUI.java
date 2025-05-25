@@ -1,18 +1,41 @@
 package org.example;
-
+import org.example.GraphVisualisation.GraphPostPartitionPanel;
 import org.example.model.PartitionResult;
+import org.example.model.Graph;  // Dodaj ten import w PartitionUI
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.awt.geom.Point2D;
 
 public class PartitionUI {
     private JPanel visualisationPanel;
     private JButton partitionBackButton;
-    private JPanel graphPostPartitionPanelPlaceholder;
+    private GraphPostPartitionPanel graphPostPartitionPanelPlaceholder;
     private List<PartitionResult.PartitionInfo> currentResults;
+    private Map<Integer, Point2D> savedPositions = new HashMap<>();
+
+    public void setGraph(Graph graph, List<PartitionResult.PartitionInfo> partitions) {
+        if (graphPostPartitionPanelPlaceholder instanceof GraphPostPartitionPanel) {
+            GraphPostPartitionPanel panel = (GraphPostPartitionPanel) graphPostPartitionPanelPlaceholder;
+            
+            // Ustaw zapisane pozycje tylko jeśli są dostępne i pasują do grafu
+            if (!savedPositions.isEmpty() && graph != null && 
+                savedPositions.size() == graph.getNumVertices()) {
+                panel.setVertexPositions(savedPositions);
+            }
+            
+            panel.setGraph(graph, partitions);
+            
+            // Zapisz nowe pozycje
+            savedPositions = panel.getVertexPositions();
+        }
+    }
 
     public void clearVisualization() {
         if (graphPostPartitionPanelPlaceholder != null) {
+            savedPositions.clear(); // Wyczyść zapisane pozycje
             graphPostPartitionPanelPlaceholder.removeAll();
             graphPostPartitionPanelPlaceholder.revalidate();
             graphPostPartitionPanelPlaceholder.repaint();
@@ -20,19 +43,7 @@ public class PartitionUI {
         currentResults = null;
     }
 
-    public void updateVisualization(List<PartitionResult.PartitionInfo> results) {
-        this.currentResults = results;
-        if (results == null || results.isEmpty()) {
-            clearVisualization();
-            return;
-        }
 
-        // Wyczyść placeholder
-        graphPostPartitionPanelPlaceholder.removeAll();
-        // Odśwież widok
-        graphPostPartitionPanelPlaceholder.revalidate();
-        graphPostPartitionPanelPlaceholder.repaint();
-    }
 
     public PartitionUI() {
         // Usuń extends JDialog, ponieważ używamy teraz CardLayout
@@ -45,6 +56,10 @@ public class PartitionUI {
 
     public JButton getpartitionBackButton() {
         return partitionBackButton;
+    }
+
+    public GraphPostPartitionPanel getGraphPostPartitionPanel() {
+        return (GraphPostPartitionPanel) graphPostPartitionPanelPlaceholder;
     }
 
     {
@@ -79,7 +94,7 @@ public class PartitionUI {
         final JPanel panel3 = new JPanel();
         panel3.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         visualisationPanel.add(panel3, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        graphPostPartitionPanelPlaceholder = new JPanel();
+        graphPostPartitionPanelPlaceholder = new GraphPostPartitionPanel();
         graphPostPartitionPanelPlaceholder.setLayout(new GridBagLayout());
         panel3.add(graphPostPartitionPanelPlaceholder, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
     }
@@ -90,5 +105,6 @@ public class PartitionUI {
     public JComponent $$$getRootComponent$$$() {
         return visualisationPanel;
     }
+
 
 }

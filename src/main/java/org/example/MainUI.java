@@ -1,4 +1,5 @@
 package org.example;
+import org.example.algorithm.GraphPartitioner;
 import org.example.model.PartitionResult;
 import org.example.model.Graph;
 import javax.swing.*;
@@ -9,7 +10,10 @@ import java.util.Locale;
 import java.awt.Color;
 import java.awt.Font;
 import java.util.List;
-
+import org.example.GraphVisualisation.GraphPrePartitionPanel;
+import java.awt.geom.Point2D;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainUI {
     private JPanel MainPage;
@@ -19,7 +23,7 @@ public class MainUI {
     private JSpinner spinnerNumCuts;
     private JSpinner spinnerMargines; // Add this field
     private JButton buttonPodziel;
-    private JPanel graphPanelPlaceholder;
+    private GraphPrePartitionPanel graphPrePartitionPanelPlaceholder; // ta sama nazwa, tylko inny typ
     private JLabel successfulCuts;
     private JButton resetujWidokButton;
     private JLabel questionIsGraphBalanced;
@@ -29,12 +33,9 @@ public class MainUI {
     private Graph graph;
     private MainFrame mainFrame;
     private DetailsUI detailsUI;  // lub dostęp przez mainFrame.getDetailsUI()
-
-    private void updateLabelColor(boolean balanced) {
-        isGraphBalanced.setForeground(balanced ? Color.GREEN : Color.RED);
-        isGraphBalanced.setText(balanced ? "TAK" : "NIE");
-
-    }
+    // ... istniejące pola ...
+    private Map<Integer, Point2D> savedPrePartitionPositions = new HashMap<>();
+    private Map<Integer, Point2D> savedPostPartitionPositions = new HashMap<>();
 
     public JButton getdetailsButton() {
         return detailsButton;
@@ -61,6 +62,12 @@ public class MainUI {
         spinnerMargines.setModel(spinnerMarginesModel); // Use the class field instead of finding by index
         buttonPodziel.addActionListener(e -> onPodzielButtonClick());
         resetujWidokButton.addActionListener(e -> onResetujWidokButtonClick());
+
+    }
+    public void saveCurrentPositions() {
+        if (graphPrePartitionPanelPlaceholder != null) {
+            savedPrePartitionPositions = graphPrePartitionPanelPlaceholder.getVertexPositions();
+        }
     }
 
     private void onPodzielButtonClick() {
@@ -89,10 +96,11 @@ public class MainUI {
 
                 // Update successful cuts count
                 successfulCuts.setText(String.valueOf(results.size()));
-
+                GraphPartitioner.findConnectedComponents(graph); // zaktualizuje komponenty
+                boolean isConnected = graph.getNumComponents() == results.size()+1;
                 // Update balance status
-                isGraphBalanced.setText(lastResult.isBalanced() ? "TAK" : "NIE");
-                isGraphBalanced.setForeground(lastResult.isBalanced() ? Color.GREEN : Color.RED);
+                isGraphBalanced.setText(isConnected? "TAK" : "NIE");
+                isGraphBalanced.setForeground(isConnected ? Color.GREEN : Color.RED);
 
             } else {
                 JOptionPane.showMessageDialog(MainPage,
@@ -117,9 +125,20 @@ public class MainUI {
                 successfulCuts.setText("...");
                 isGraphBalanced.setText("...");
                 isGraphBalanced.setForeground(Color.BLACK);
+                // Reset spinners to default values
+                spinnerNumCuts.setValue(1);
+                spinnerMargines.setValue(10);
+                
+                // Wyczyść zapisane pozycje
+                savedPrePartitionPositions.clear();
+                savedPostPartitionPositions.clear();
+                
+                if (graphPrePartitionPanelPlaceholder != null) {
+                    graphPrePartitionPanelPlaceholder.clearVisualization();
+                }
                 graph = null;
                 buttonPodziel.setEnabled(false);
-                detailsButton.setEnabled(false);  // Dezaktywuj przycisk szczegółów
+                detailsButton.setEnabled(false);
                 postPartitionButton.setEnabled(false);
             }
         } catch (Exception ex) {
@@ -131,21 +150,67 @@ public class MainUI {
         }
     }
 
+    public void savePrePartitionPositions() {
+        if (graphPrePartitionPanelPlaceholder != null) {
+            savedPrePartitionPositions = graphPrePartitionPanelPlaceholder.getVertexPositions();
+        }
+    }
+
+    public void restorePrePartitionPositions() {
+        if (graphPrePartitionPanelPlaceholder != null && !savedPrePartitionPositions.isEmpty()) {
+            graphPrePartitionPanelPlaceholder.setVertexPositions(savedPrePartitionPositions);
+        }
+    }
+
     // Method to set the graph (call it after generating/loading the graph)
     public void setGraph(Graph graph) {
         this.graph = graph;
 
-        // Update UI state
         if (graph != null) {
             buttonPodziel.setEnabled(true);
-            detailsButton.setEnabled(true);  // Aktywuj przycisk szczegółów
-            // Reset previous results
+            detailsButton.setEnabled(true);
+            postPartitionButton.setEnabled(true);
             successfulCuts.setText("...");
             isGraphBalanced.setText("...");
-            isGraphBalanced.setForeground(Color.BLACK); // Reset color
+            isGraphBalanced.setForeground(Color.BLACK);
+        
+            if (graphPrePartitionPanelPlaceholder != null) {
+                // Sprawdź czy mamy zapisane pozycje pasujące do tego grafu
+                if (!savedPrePartitionPositions.isEmpty() && 
+                    savedPrePartitionPositions.size() == graph.getNumVertices()) {
+                    graphPrePartitionPanelPlaceholder.setVertexPositions(savedPrePartitionPositions);
+                }
+                graphPrePartitionPanelPlaceholder.setGraph(graph);
+                graphPrePartitionPanelPlaceholder.revalidate();
+                graphPrePartitionPanelPlaceholder.repaint();
+            }
         } else {
             buttonPodziel.setEnabled(false);
-            detailsButton.setEnabled(false);  // Dezaktywuj przycisk szczegółów
+            detailsButton.setEnabled(false);
+        }
+    }
+
+    // Dodaj metodę do przywracania pozycji
+    public void restoreGraphState() {
+        if (graph != null && graphPrePartitionPanelPlaceholder != null && 
+            !savedPrePartitionPositions.isEmpty() && 
+            savedPrePartitionPositions.size() == graph.getNumVertices()) {
+            graphPrePartitionPanelPlaceholder.setVertexPositions(savedPrePartitionPositions);
+            graphPrePartitionPanelPlaceholder.setGraph(graph);
+        }
+    }
+
+    // Przywracanie pozycji gdy wracamy do oryginalnego grafu
+    public void restoreOriginalGraph(Graph originalGraph) {
+        if (originalGraph != null) {
+            this.graph = originalGraph; // używamy oryginalnego grafu, nie jego kopii
+            if (graphPrePartitionPanelPlaceholder != null) {
+                if (!savedPrePartitionPositions.isEmpty() && 
+                    savedPrePartitionPositions.size() == originalGraph.getNumVertices()) {
+                    graphPrePartitionPanelPlaceholder.setVertexPositions(savedPrePartitionPositions);
+                }
+                graphPrePartitionPanelPlaceholder.setGraph(originalGraph);
+            }
         }
     }
 
@@ -181,9 +246,9 @@ public class MainUI {
         if (MainPageFont != null) MainPage.setFont(MainPageFont);
         MainPage.setForeground(new Color(-5306302));
         MainPage.setRequestFocusEnabled(false);
-        graphPanelPlaceholder = new JPanel();
-        graphPanelPlaceholder.setLayout(new GridBagLayout());
-        graphPanelPlaceholder.setPreferredSize(new Dimension(0, 0));
+        graphPrePartitionPanelPlaceholder = new GraphPrePartitionPanel();
+        graphPrePartitionPanelPlaceholder.setLayout(new GridBagLayout());
+        graphPrePartitionPanelPlaceholder.setPreferredSize(new Dimension(0, 0));
         GridBagConstraints gbc;
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -192,7 +257,7 @@ public class MainUI {
         gbc.gridheight = 11;
         gbc.weightx = 9.0;
         gbc.fill = GridBagConstraints.BOTH;
-        MainPage.add(graphPanelPlaceholder, gbc);
+        MainPage.add(graphPrePartitionPanelPlaceholder, gbc);
         final JPanel panel1 = new JPanel();
         panel1.setLayout(new GridBagLayout());
         gbc = new GridBagConstraints();

@@ -12,6 +12,8 @@ import java.io.File;
 import java.util.List;
 import java.util.ArrayList;
 import org.example.model.GraphException;
+import java.awt.geom.Point2D;
+import java.util.Map;
 
 public class MainFrame extends JFrame {
     private List<PartitionResult.PartitionInfo> partitionResults;
@@ -38,7 +40,7 @@ public class MainFrame extends JFrame {
         } else if (newPanel == partitionUI.getPanel()) {
             panelName = PARTITION_PANEL;
         }
-        
+
         cardLayout.show(contentPanel, panelName);
         revalidate();
         repaint();
@@ -54,26 +56,24 @@ public class MainFrame extends JFrame {
             if (this.partitionUI != null) {
                 this.partitionUI.clearVisualization();
             }
-            this.partitionUI = null;
         } else {
-            // Utwórz nową instancję PartitionUI jeśli nie istnieje
-            if (this.partitionUI == null) {
-                this.partitionUI = new PartitionUI();
-                contentPanel.add(partitionUI.getPanel(), PARTITION_PANEL);
-            }
-            // Aktualizuj wizualizację w PartitionUI
-            this.partitionUI.updateVisualization(newResults);
-        }
-        
-        // Aktualizacja detailsUI
-        if (detailsUI != null) {
-            detailsUI.setPartitionResults(partitionResults);
-            if (originalNeighbors != null) {
-                detailsUI.setOriginalNeighbors(originalNeighbors);
+            // Aktualizuj wizualizację w PartitionUI tylko jeśli mamy graf i wyniki
+            if (this.partitionUI != null && this.graph != null) {
+                this.partitionUI.setGraph(graph, newResults);
             }
         }
+
+        // Aktualizacja detailsUI...
     }
 
+    private Graph originalGraph = null;
+
+
+    private void copyGraphWithPositions(Graph source, Graph target) {
+        // Skopiuj pozycje wierzchołków
+        Map<Integer, Point2D> positions = source.getAllVertexPositions();
+        target.setAllVertexPositions(positions);
+    }
 
     public MainFrame() {
         setTitle("Aplikacja do podziału grafu");
@@ -83,6 +83,19 @@ public class MainFrame extends JFrame {
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout);
         setContentPane(contentPanel);
+
+        // Inicjalizacja PartitionUI
+        partitionUI = new PartitionUI();
+        contentPanel.add(partitionUI.getPanel(), PARTITION_PANEL);
+
+        // Dodaj obsługę przycisku powrotu
+        partitionUI.getpartitionBackButton().addActionListener(e -> {
+            cardLayout.show(contentPanel, MAIN_PANEL);
+            if (originalGraph != null) {
+                // Zamiast tworzyć nowy graf, przywróć oryginalny z zachowanymi pozycjami
+                mainUI.restoreOriginalGraph(originalGraph);
+            }
+        });
 
         // Inicjalizacja komponentów UI
         mainUI = new MainUI(this);
@@ -98,7 +111,7 @@ public class MainFrame extends JFrame {
 
         setSize(800, 600);
         setLocationRelativeTo(null);
-        
+
         // Pokaż główny panel na starcie
         cardLayout.show(contentPanel, MAIN_PANEL);
     }
@@ -118,16 +131,16 @@ public class MainFrame extends JFrame {
             if (partitionResults != null) {
                 detailsUI.setPartitionResults(partitionResults);
             }
-            
+
             // Dodaj panel details do CardLayout jeśli jeszcze nie został dodany
             contentPanel.add(detailsUI.getPanel(), DETAILS_PANEL);
             cardLayout.show(contentPanel, DETAILS_PANEL);
 
-            detailsUI.getBackButton().addActionListener(ev -> 
+            detailsUI.getBackButton().addActionListener(ev ->
                 cardLayout.show(contentPanel, MAIN_PANEL));
         });
 
-        // Przycisk Partition
+        // Modyfikacja obsługi przycisku Partition
         mainUI.getpostPartitionButton().addActionListener(e -> {
             if (graph == null) {
                 JOptionPane.showMessageDialog(this,
@@ -136,13 +149,23 @@ public class MainFrame extends JFrame {
                         JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            
-            // Dodaj panel partition do CardLayout jeśli jeszcze nie został dodany
-            contentPanel.add(partitionUI.getPanel(), PARTITION_PANEL);
-            cardLayout.show(contentPanel, PARTITION_PANEL);
 
-            partitionUI.getpartitionBackButton().addActionListener(ev -> 
-                cardLayout.show(contentPanel, MAIN_PANEL));
+            if (partitionResults == null || partitionResults.isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                        "Proszę najpierw wykonać podział grafu.",
+                        "Brak wyników podziału",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // Zapisz pozycje przed przełączeniem widoku
+            mainUI.saveCurrentPositions();
+
+            // Ustaw graf i wyniki podziału w PartitionUI
+            partitionUI.setGraph(graph, partitionResults);
+
+            // Przełącz widok
+            cardLayout.show(contentPanel, PARTITION_PANEL);
         });
     }
 
@@ -193,6 +216,9 @@ public class MainFrame extends JFrame {
                 }
                 try {
                     graph = GraphLoaderCsrrg.loadGraph(selectedFile.getPath());
+                    originalGraph = new Graph(graph);
+                    copyGraphWithPositions(graph, originalGraph);
+                    mainUI.setGraph(graph);
                 } catch (GraphException ge) {
                     JOptionPane.showMessageDialog(this,
                             "Błąd podczas tworzenia struktury grafu:\n" + ge.getMessage(),
@@ -221,6 +247,13 @@ public class MainFrame extends JFrame {
                                     selectedFile.getName() + "\n\n",
                             "Graf wczytany pomyślnie",
                             JOptionPane.INFORMATION_MESSAGE);
+
+                // Po udanym wczytaniu grafu:
+                if (partitionResults != null) {
+                    partitionUI.setGraph(graph, partitionResults);
+                } else {
+                    partitionUI.clearVisualization();
+                }
 
             }
         });
@@ -261,6 +294,11 @@ public class MainFrame extends JFrame {
                             "Błąd podczas wczytywania grafu: " + ex.getMessage(),
                             "Błąd",
                             JOptionPane.ERROR_MESSAGE);
+                }
+                if (partitionResults != null) {
+                    partitionUI.setGraph(graph, partitionResults);
+                } else {
+                    partitionUI.clearVisualization();
                 }
             }
         });

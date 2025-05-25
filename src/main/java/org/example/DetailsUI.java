@@ -36,28 +36,6 @@ public class DetailsUI {
         initializeTables();
     }
 
-    private List<Integer>[] deepCopyNeighbors(List<Integer>[] neighbors) {
-        if (neighbors == null || graph == null) return null;
-
-        @SuppressWarnings("unchecked")
-        List<Integer>[] copy = new List[graph.getNumVertices()];
-        for (int i = 0; i < graph.getNumVertices(); i++) {
-            if (neighbors[i] != null) {
-                copy[i] = new ArrayList<>(neighbors[i]);
-            } else {
-                copy[i] = new ArrayList<>();
-            }
-        }
-        return copy;
-    }
-
-    // Nowa metoda do aktualizacji z zachowaniem oryginalnego stanu
-    public void updateData(Graph newGraph, List<PartitionResult.PartitionInfo> results, List<Integer>[] originalNeighbors) {
-        this.graph = newGraph;
-        this.partitionResults = results;
-        this.originalNeighbors = deepCopyNeighbors(originalNeighbors);
-        initializeTables();
-    }
 
     private void initializeTables() {
         showOriginalGraphTable();
@@ -87,7 +65,7 @@ public class DetailsUI {
                 }
 
                 model.addRow(new Object[]{
-                        String.format("Vertex %d", i),
+                        String.format("%d", i),
                         adjacencyStr.toString()
                 });
             }

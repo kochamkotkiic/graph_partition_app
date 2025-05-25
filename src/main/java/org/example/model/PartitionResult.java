@@ -1,89 +1,53 @@
 package org.example.model;
+
 import org.example.algorithm.GraphPartitioner;
-import org.example.model.Graph;
 import java.util.*;
 
 public class PartitionResult {
-
     public static class PartitionInfo {
-        private int cutNumber;
-        private int numComponents;
-        private Map<Integer, List<Integer>> componentVertices;
+        private final int cutNumber;
+        private final int numComponents;
+        private final int marginPercent;
         private boolean isBalanced;
-        private int marginPercent;
+
+        private final Map<Integer, List<Integer>> componentVertices;
 
         public PartitionInfo(int cutNumber, int numComponents, int marginPercent) {
             this.cutNumber = cutNumber;
             this.numComponents = numComponents;
             this.marginPercent = marginPercent;
             this.componentVertices = new HashMap<>();
-            this.isBalanced = false;
         }
 
-        // Getters
-        public int getCutNumber() { return cutNumber; }
-        public int getNumComponents() { return numComponents; }
-        public Map<Integer, List<Integer>> getComponentVertices() { return componentVertices; }
-        public boolean isBalanced() { return isBalanced; }
-        public int getMarginPercent() { return marginPercent; }
-
-        public void setBalanced(boolean balanced) { this.isBalanced = balanced; }
         public void addComponentVertices(int componentId, List<Integer> vertices) {
-            this.componentVertices.put(componentId, new ArrayList<>(vertices));
+            componentVertices.put(componentId, new ArrayList<>(vertices));
+        }
+
+        public int getCutNumber() {
+            return cutNumber;
+        }
+
+        public int getNumComponents() {
+            return numComponents;
+        }
+
+        public int getMarginPercent() {
+            return marginPercent;
+        }
+
+        public boolean isBalanced() {
+            return isBalanced;
+        }
+
+        public void setBalanced(boolean balanced) {
+            isBalanced = balanced;
+        }
+
+        public Map<Integer, List<Integer>> getComponentVertices() {
+            return componentVertices;
         }
     }
 
-    // DODANA BRAKUJĄCA KLASA
-    public static class PartitioningResult {
-        private final List<PartitionInfo> partitionInfos;
-        private final List<Integer>[] originalNeighbors;
-
-        public PartitioningResult(List<PartitionInfo> partitionInfos, List<Integer>[] originalNeighbors) {
-            this.partitionInfos = new ArrayList<>(partitionInfos);
-            this.originalNeighbors = deepCopyNeighbors(originalNeighbors);
-        }
-
-        public List<PartitionInfo> getPartitionInfos() {
-            return new ArrayList<>(partitionInfos);
-        }
-
-        public List<Integer>[] getOriginalNeighbors() {
-            return deepCopyNeighbors(originalNeighbors);
-        }
-    }
-
-    // Usunąłem zduplikowaną metodę performPartitioningWithOriginal()
-    public static PartitioningResult performPartitioningWithOriginal(Graph graph, int numCuts, int marginPercent) {
-        List<Integer>[] originalNeighbors = deepCopyNeighbors(graph.getNeighbors());
-        List<PartitionInfo> results = performPartitioning(graph, numCuts, marginPercent);
-        return new PartitioningResult(results, originalNeighbors);
-    }
-
-
-
-    // Metoda do głębokiego kopiowania listy sąsiedztwa
-    private static List<Integer>[] deepCopyNeighbors(List<Integer>[] neighbors) {
-        if (neighbors == null) return null;
-
-        @SuppressWarnings("unchecked")
-        List<Integer>[] copy = new List[neighbors.length];
-        for (int i = 0; i < neighbors.length; i++) {
-            if (neighbors[i] != null) {
-                copy[i] = new ArrayList<>(neighbors[i]);
-            } else {
-                copy[i] = new ArrayList<>();
-            }
-        }
-        return copy;
-    }
-
-    /**
-     * ORYGINALNA METODA - Performs recursive graph partitioning
-     * @param graph The graph to partition
-     * @param numCuts Number of cuts to perform
-     * @param marginPercent Margin percentage for balancing
-     * @return List of partition information for each successful cut
-     */
     public static List<PartitionInfo> performPartitioning(Graph graph, int numCuts, int marginPercent) {
         List<PartitionInfo> results = new ArrayList<>();
         int successfulCuts = 0;
@@ -119,9 +83,12 @@ public class PartitionResult {
 
                 // Create partition info
                 PartitionInfo partitionInfo = new PartitionInfo(successfulCuts, graph.getNumComponents(), marginPercent);
+                
+                // Skoro partitionGraph zwrócił true, to wiemy że podział jest zbalansowany
+                partitionInfo.setBalanced(true);
 
                 // Analyze and store component information
-                analyzeComponents(graph, partitionInfo);
+                analyzeAndStoreComponents(graph, partitionInfo);
 
                 // Print detailed results
                 printAdjacencyList(graph, "AFTER CUT " + successfulCuts);
@@ -143,10 +110,7 @@ public class PartitionResult {
         return results;
     }
 
-    /**
-     * Analyzes components and determines if they are balanced
-     */
-    private static void analyzeComponents(Graph graph, PartitionInfo partitionInfo) {
+    private static void analyzeAndStoreComponents(Graph graph, PartitionInfo partitionInfo) {
         int[] component = graph.getComponent();
         Map<Integer, List<Integer>> componentMap = new HashMap<>();
 
@@ -160,157 +124,93 @@ public class PartitionResult {
         for (Map.Entry<Integer, List<Integer>> entry : componentMap.entrySet()) {
             partitionInfo.addComponentVertices(entry.getKey(), entry.getValue());
         }
-
-        // Check if components are balanced
-        if (componentMap.size() >= 2) {
-            List<Integer> sizes = new ArrayList<>();
-            for (List<Integer> vertices : componentMap.values()) {
-                sizes.add(vertices.size());
-            }
-
-            // Calculate balance
-            int minSize = Collections.min(sizes);
-            int maxSize = Collections.max(sizes);
-            double imbalance = ((double)(maxSize - minSize) / minSize) * 100;
-
-            partitionInfo.setBalanced(imbalance <= partitionInfo.getMarginPercent());
-        }
     }
 
-    /**
-     * Prints the adjacency list of the graph
-     */
-    private static void printAdjacencyList(Graph graph, String title) {
-        System.out.printf("\n--- %s - ADJACENCY LIST ---\n", title);
-        List<Integer>[] neighbors = graph.getNeighbors();
-        int[] component = graph.getComponent();
-
-        for (int i = 0; i < graph.getNumVertices(); i++) {
-            System.out.printf("Vertex %d (Component %d): ", i, component[i]);
-
-            if (neighbors[i].isEmpty()) {
-                System.out.print("[]");
-            } else {
-                System.out.print("[");
-                for (int j = 0; j < neighbors[i].size(); j++) {
-                    System.out.print(neighbors[i].get(j));
-                    if (j < neighbors[i].size() - 1) {
-                        System.out.print(", ");
-                    }
-                }
-                System.out.print("]");
-            }
-            System.out.println();
-        }
-        System.out.println();
-    }
-
-    /**
-     * Prints component analysis
-     */
-    private static void printComponentAnalysis(Graph graph, int cutNumber) {
-        System.out.printf("--- COMPONENT ANALYSIS (After Cut %d) ---\n", cutNumber);
-
-        int[] component = graph.getComponent();
-        Map<Integer, List<Integer>> componentMap = new HashMap<>();
-
-        // Group vertices by component
-        for (int i = 0; i < graph.getNumVertices(); i++) {
-            int comp = component[i];
-            componentMap.computeIfAbsent(comp, k -> new ArrayList<>()).add(i);
-        }
-
-        System.out.printf("Total components: %d\n", componentMap.size());
-
-        for (Map.Entry<Integer, List<Integer>> entry : componentMap.entrySet()) {
-            int compId = entry.getKey();
-            List<Integer> vertices = entry.getValue();
-
-            System.out.printf("Component %d: %d vertices -> ", compId, vertices.size());
-            System.out.print("[");
-            for (int i = 0; i < vertices.size(); i++) {
-                System.out.print(vertices.get(i));
-                if (i < vertices.size() - 1) {
-                    System.out.print(", ");
-                }
-            }
-            System.out.println("]");
-        }
-        System.out.println();
-    }
-
-    /**
-     * Prints balance analysis
-     */
     private static void printBalanceAnalysis(PartitionInfo partitionInfo) {
         System.out.printf("--- BALANCE ANALYSIS (Cut %d) ---\n", partitionInfo.getCutNumber());
 
         Map<Integer, List<Integer>> components = partitionInfo.getComponentVertices();
-        List<Integer> sizes = new ArrayList<>();
-
+        
+        // Print all component sizes
         for (Map.Entry<Integer, List<Integer>> entry : components.entrySet()) {
-            int size = entry.getValue().size();
-            sizes.add(size);
-            System.out.printf("Component %d size: %d\n", entry.getKey(), size);
+            System.out.printf("Component %d size: %d\n", entry.getKey(), entry.getValue().size());
         }
 
-        if (sizes.size() >= 2) {
-            int minSize = Collections.min(sizes);
-            int maxSize = Collections.max(sizes);
-            double imbalance = ((double)(maxSize - minSize) / minSize) * 100;
+        if (components.size() >= 2) {
+            // Znajdź dwa komponenty o najmniejszej sumie rozmiarów
+            int smallestSum = Integer.MAX_VALUE;
+            int comp1 = -1;
+            int comp2 = -1;
 
-            System.out.printf("Size difference: %d (min: %d, max: %d)\n", maxSize - minSize, minSize, maxSize);
-            System.out.printf("Imbalance: %.2f%% (margin: %d%%)\n", imbalance, partitionInfo.getMarginPercent());
-            System.out.printf("Balanced: %s\n", partitionInfo.isBalanced() ? "✓ YES" : "✗ NO");
-        } else {
-            System.out.println("Cannot assess balance - need at least 2 components");
+            for (int i : components.keySet()) {
+                for (int j : components.keySet()) {
+                    if (i < j) {  // unikamy porównywania komponentu ze sobą i duplikatów
+                        int sum = components.get(i).size() + components.get(j).size();
+                        if (sum < smallestSum) {
+                            smallestSum = sum;
+                            comp1 = i;
+                            comp2 = j;
+                        }
+                    }
+                }
+            }
+
+            int size1 = components.get(comp1).size();
+            int size2 = components.get(comp2).size();
+            int diff = Math.abs(size1 - size2);
+            int totalSize = size1 + size2;
+        
+        // Używamy tej samej logiki co w GraphPartitioner
+        int allowedMargin = (partitionInfo.getMarginPercent() * totalSize) / 100;
+
+        System.out.printf("Analyzing split result - comparing components from split\n");
+        System.out.printf("Size difference: %d (between new components)\n", diff);
+        System.out.printf("Components being compared: %d and %d (sizes: %d, %d)\n",
+            comp1, comp2, size1, size2);
+        System.out.printf("Allowed margin: %d (margin %d%% of total size %d)\n",
+            allowedMargin, partitionInfo.getMarginPercent(), totalSize);
+        System.out.printf("Balance check: %s (diff %d <= allowed %d)\n", 
+            diff <= allowedMargin ? "✓ BALANCED" : "✗ UNBALANCED",
+            diff, allowedMargin);
+    } else {
+        System.out.println("Cannot assess balance - need at least 2 components");
+    }
+    System.out.println();
+}
+
+    private static void printComponentAnalysis(Graph graph, int cutNumber) {
+        System.out.printf("--- COMPONENT ANALYSIS (Cut %d) ---\n", cutNumber);
+        int[] component = graph.getComponent();
+        Map<Integer, List<Integer>> components = new HashMap<>();
+
+        for (int i = 0; i < graph.getNumVertices(); i++) {
+            components.computeIfAbsent(component[i], k -> new ArrayList<>()).add(i);
+        }
+
+        for (Map.Entry<Integer, List<Integer>> entry : components.entrySet()) {
+            System.out.printf("Component %d: %s\n", entry.getKey(), entry.getValue());
         }
         System.out.println();
     }
 
-    /**
-     * Prints final summary of all partitioning results
-     */
-    private static void printFinalSummary(List<PartitionInfo> results, int targetCuts) {
-        System.out.println("\n=== FINAL PARTITIONING SUMMARY ===");
-        System.out.printf("Target cuts: %d\n", targetCuts);
-        System.out.printf("Successful cuts: %d\n", results.size());
-        System.out.printf("Success rate: %.2f%%\n", (double)results.size() / targetCuts * 100);
-
-        if (!results.isEmpty()) {
-            PartitionInfo lastResult = results.get(results.size() - 1);
-            System.out.printf("Final components: %d\n", lastResult.getNumComponents());
-
-            System.out.println("\nCut History:");
-            for (PartitionInfo result : results) {
-                System.out.printf("  Cut %d: %d components, %s\n",
-                        result.getCutNumber(),
-                        result.getNumComponents(),
-                        result.isBalanced() ? "Balanced" : "Unbalanced");
-            }
-
-            System.out.println("\nFinal Component Sizes:");
-            PartitionInfo finalResult = results.get(results.size() - 1);
-            for (Map.Entry<Integer, List<Integer>> entry : finalResult.getComponentVertices().entrySet()) {
-                System.out.printf("  Component %d: %d vertices\n", entry.getKey(), entry.getValue().size());
-            }
+    private static void printAdjacencyList(Graph graph, String title) {
+        System.out.println("--- " + title + " ---");
+        List<Integer>[] neighbors = graph.getNeighbors();
+        for (int i = 0; i < graph.getNumVertices(); i++) {
+            System.out.printf("Vertex %d: %s\n", i, neighbors[i]);
         }
-
-        System.out.println("=== END SUMMARY ===\n");
+        System.out.println();
     }
 
-    /**
-     * Helper method to run partitioning with default settings and print results
-     */
-    public static void runPartitioningDemo(Graph graph, int numCuts, int marginPercent) {
-        System.out.println("Starting graph partitioning demonstration...\n");
-
-        List<PartitionInfo> results = performPartitioning(graph, numCuts, marginPercent);
-
-        if (results.isEmpty()) {
-            System.out.println("No successful partitions were made.");
-        } else {
-            System.out.printf("Partitioning completed with %d successful cuts.\n", results.size());
+    private static void printFinalSummary(List<PartitionInfo> results, int targetCuts) {
+        System.out.println("\n=== PARTITIONING SUMMARY ===");
+        System.out.printf("Completed %d out of %d planned cuts\n", results.size(), targetCuts);
+        System.out.println("\nCut History:");
+        for (PartitionInfo info : results) {
+            System.out.printf("  Cut %d: %d components, %s\n",
+                    info.getCutNumber(),
+                    info.getNumComponents(),
+                    info.isBalanced() ? "Balanced" : "Unbalanced");
         }
     }
 }

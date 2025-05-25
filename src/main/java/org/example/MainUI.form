@@ -12,7 +12,7 @@
     </properties>
     <border type="none"/>
     <children>
-      <grid id="a8a" binding="graphPanelPlaceholder" layout-manager="GridBagLayout">
+      <grid id="a8a" binding="graphPrePartitionPanelPlaceholder" layout-manager="GridBagLayout">
         <constraints>
           <grid row="1" column="0" row-span="11" col-span="2" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
           <gridbag weightx="9.0" weighty="0.0"/>
