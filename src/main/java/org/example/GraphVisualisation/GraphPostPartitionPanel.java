@@ -1,5 +1,6 @@
 package org.example.GraphVisualisation;
 
+import org.example.PartitionUI;
 import org.example.model.Graph;
 import org.example.model.PartitionResult;
 import javax.swing.*;
@@ -14,6 +15,8 @@ public class GraphPostPartitionPanel extends JPanel {
     private List<PartitionResult.PartitionInfo> partitions;
     private Map<Integer, Point2D> vertexPositions = new HashMap<>();
     private boolean layoutGenerated = false;
+    private PartitionUI partitionUI ;
+
 
     // Kolory dla komponentów (max 10 kolorów, potem się powtarzają)
     private static final Color[] COMPONENT_COLORS = {
@@ -41,24 +44,24 @@ public class GraphPostPartitionPanel extends JPanel {
     }
 
     public void setGraph(Graph graph, List<PartitionResult.PartitionInfo> partitions) {
-        if (this.graph != null && graph != null && 
-            this.graph.getNumVertices() == graph.getNumVertices()) {
+        if (this.graph != null && graph != null &&
+                this.graph.getNumVertices() == graph.getNumVertices()) {
             // Zachowaj stare pozycje
         } else {
             // Wyczyść pozycje tylko jeśli zmienił się graf
             vertexPositions.clear();
             layoutGenerated = false;
         }
-        
+
         this.graph = graph;
         this.partitions = partitions;
-        
+
         // Generuj layout od razu przy ustawianiu grafu
         if (!layoutGenerated) {
             generateRandomLayout(); // Użyj lepszej metody generowania layoutu
             layoutGenerated = true;
         }
-        
+
         revalidate();
         repaint();
     }
@@ -153,11 +156,21 @@ public class GraphPostPartitionPanel extends JPanel {
                     visibleVertices.add(entry.getKey());
                 }
             }
+            if (partitionUI != null) {
+                partitionUI.updateViewZoomInfo(zoomLevel,
+                        visibleVertices.size(),
+                        graph != null ? graph.getNumVertices() : 0);
+            }
         } catch (Exception e) {
             viewportBounds = null;
             visibleVertices.clear();
+            if (partitionUI != null) {
+                partitionUI.updateViewZoomInfo(zoomLevel, 0,
+                        graph != null ? graph.getNumVertices() : 0);
+            }
         }
     }
+
 
     private AffineTransform viewTransform() {
         AffineTransform transform = new AffineTransform();
@@ -192,73 +205,86 @@ public class GraphPostPartitionPanel extends JPanel {
             drawEdges(g2d);
             drawVertices(g2d);
         }
-
-        // Rysuj informacje o widoku (w współrzędnych ekranu)
-        drawViewInfo(g);
+        
     }
 
-private void drawEdges(Graphics2D g2d) {
-    PartitionResult.PartitionInfo lastPartition = partitions.get(partitions.size()-1);
-    Map<Integer, List<Integer>> components = lastPartition.getComponentVertices();
-    List<Integer>[] neighbors = graph.getNeighbors();
+    private void drawEdges(Graphics2D g2d) {
+        PartitionResult.PartitionInfo lastPartition = partitions.get(partitions.size()-1);
+        Map<Integer, List<Integer>> components = lastPartition.getComponentVertices();
+        List<Integer>[] neighbors = graph.getNeighbors();
 
-    // Stwórz mapę vertex -> component dla łatwiejszego dostępu
-    Map<Integer, Integer> vertexToComponent = new HashMap<>();
-    for (Map.Entry<Integer, List<Integer>> entry : components.entrySet()) {
-        for (Integer vertex : entry.getValue()) {
-            vertexToComponent.put(vertex, entry.getKey());
+        // Stwórz mapę vertex -> component dla łatwiejszego dostępu
+        Map<Integer, Integer> vertexToComponent = new HashMap<>();
+        for (Map.Entry<Integer, List<Integer>> entry : components.entrySet()) {
+            for (Integer vertex : entry.getValue()) {
+                vertexToComponent.put(vertex, entry.getKey());
+            }
         }
-    }
 
-    for (int i = 0; i < neighbors.length; i++) {
-        Point2D p1 = vertexPositions.get(i);
-        if (p1 == null || !visibleVertices.contains(i)) continue;
+        for (int i = 0; i < neighbors.length; i++) {
+            Point2D p1 = vertexPositions.get(i);
+            if (p1 == null || !visibleVertices.contains(i)) continue;
 
-        Color edgeColor = getComponentColor(vertexToComponent.get(i)).darker();
-        g2d.setColor(edgeColor);
+            Color edgeColor = getComponentColor(vertexToComponent.get(i)).darker();
+            g2d.setColor(edgeColor);
 
-        for (int neighbor : neighbors[i]) {
-            if (neighbor > i) { // Rysuj każdą krawędź tylko raz
-                Point2D p2 = vertexPositions.get(neighbor);
-                if (p2 != null && visibleVertices.contains(neighbor)) {
-                    g2d.drawLine(
-                            (int) p1.getX(), (int) p1.getY(),
-                            (int) p2.getX(), (int) p2.getY()
-                    );
+            for (int neighbor : neighbors[i]) {
+                if (neighbor > i) { // Rysuj każdą krawędź tylko raz
+                    Point2D p2 = vertexPositions.get(neighbor);
+                    if (p2 != null && visibleVertices.contains(neighbor)) {
+                        g2d.drawLine(
+                                (int) p1.getX(), (int) p1.getY(),
+                                (int) p2.getX(), (int) p2.getY()
+                        );
+                    }
                 }
             }
         }
     }
-}
 
-private void drawVertices(Graphics2D g2d) {
-    PartitionResult.PartitionInfo lastPartition = partitions.get(partitions.size()-1);
-    Map<Integer, List<Integer>> components = lastPartition.getComponentVertices();
-    int vertexSize = calculateVertexSize();
+    private void drawVertices(Graphics2D g2d) {
+        PartitionResult.PartitionInfo lastPartition = partitions.get(partitions.size()-1);
+        Map<Integer, List<Integer>> components = lastPartition.getComponentVertices();
+        int vertexSize = calculateVertexSize();
 
-    // Stwórz mapę vertex -> component dla łatwiejszego dostępu
-    Map<Integer, Integer> vertexToComponent = new HashMap<>();
-    for (Map.Entry<Integer, List<Integer>> entry : components.entrySet()) {
-        for (Integer vertex : entry.getValue()) {
-            vertexToComponent.put(vertex, entry.getKey());
+        // Stwórz mapę vertex -> component dla łatwiejszego dostępu
+        Map<Integer, Integer> vertexToComponent = new HashMap<>();
+        for (Map.Entry<Integer, List<Integer>> entry : components.entrySet()) {
+            for (Integer vertex : entry.getValue()) {
+                vertexToComponent.put(vertex, entry.getKey());
+            }
+        }
+
+        // Ustaw czcionkę tylko jeśli będziemy rysować etykiety - tak jak w GraphPrePartitionPanel
+        boolean drawLabels = zoomLevel > 0.8 && graph.getNumVertices() < 1000;
+        if (drawLabels) {
+            g2d.setFont(g2d.getFont().deriveFont((float)(8 / Math.sqrt(zoomLevel))));
+        }
+
+        for (Map.Entry<Integer, Point2D> entry : vertexPositions.entrySet()) {
+            int vertex = entry.getKey();
+            Point2D pos = entry.getValue();
+            if (pos != null && visibleVertices.contains(vertex)) {
+                Color vertexColor = getComponentColor(vertexToComponent.get(vertex));
+                g2d.setColor(vertexColor);
+                g2d.fillOval(
+                        (int) (pos.getX() - vertexSize/2),
+                        (int) (pos.getY() - vertexSize/2),
+                        vertexSize, vertexSize
+                );
+
+                // Rysuj etykietę z numerem wierzchołka jeśli zoom jest wystarczająco duży
+                if (drawLabels) {
+                    g2d.setColor(Color.BLACK);
+                    String label = String.valueOf(vertex);
+                    g2d.drawString(label,
+                            (int) (pos.getX() + vertexSize/2 + 2),
+                            (int) (pos.getY() + vertexSize/2));
+                    g2d.setColor(vertexColor); // Przywróć kolor wierzchołka
+                }
+            }
         }
     }
-
-    for (Map.Entry<Integer, Point2D> entry : vertexPositions.entrySet()) {
-        int vertex = entry.getKey();
-        Point2D pos = entry.getValue();
-
-        if (pos != null && visibleVertices.contains(vertex)) {
-            Color vertexColor = getComponentColor(vertexToComponent.get(vertex));
-            g2d.setColor(vertexColor);
-            g2d.fillOval(
-                    (int) (pos.getX() - vertexSize/2),
-                    (int) (pos.getY() - vertexSize/2),
-                    vertexSize, vertexSize
-            );
-        }
-    }
-}
 
     private int calculateVertexSize() {
         // Dynamiczny rozmiar wierzchołka w zależności od zoomu
@@ -271,29 +297,6 @@ private void drawVertices(Graphics2D g2d) {
         return COMPONENT_COLORS[Math.abs(componentIndex) % COMPONENT_COLORS.length];
     }
 
-    private void drawViewInfo(Graphics g) {
-        String info = String.format("Zoom: %.1fx | Widoczne: %d/%d",
-                zoomLevel,
-                visibleVertices.size(),
-                graph != null ? graph.getNumVertices() : 0);
-
-        Graphics2D g2d = (Graphics2D) g;
-        g2d.setColor(Color.BLACK);
-        g2d.setFont(new Font("Arial", Font.PLAIN, 12));
-
-        FontMetrics fm = g2d.getFontMetrics();
-        int textWidth = fm.stringWidth(info);
-        int x = getWidth() - textWidth - 10;
-        int y = getHeight() - 10;
-
-        // Tło dla tekstu
-        g2d.setColor(new Color(255, 255, 255, 200));
-        g2d.fillRect(x - 5, y - fm.getHeight(), textWidth + 10, fm.getHeight() + 5);
-
-        // Sam tekst
-        g2d.setColor(Color.BLACK);
-        g2d.drawString(info, x, y);
-    }
 
     public Map<Integer, Point2D> getVertexPositions() {
         return new HashMap<>(vertexPositions);
@@ -305,5 +308,9 @@ private void drawVertices(Graphics2D g2d) {
             layoutGenerated = true;
             repaint();
         }
+    }
+
+    public void setPartitionUI(PartitionUI partitionUI) {
+        this.partitionUI = partitionUI;
     }
 }

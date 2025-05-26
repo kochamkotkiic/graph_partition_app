@@ -5,6 +5,7 @@ import org.example.model.Graph;
 import org.example.io.GraphLoaderCsrrg;
 import org.example.io.GraphLoaderBin;
 import org.example.model.Graph;
+import org.example.GraphVisualisation.GraphPostPartitionPanel;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
@@ -59,10 +60,14 @@ public class MainFrame extends JFrame {
         } else {
             // Aktualizuj wizualizację w PartitionUI tylko jeśli mamy graf i wyniki
             if (this.partitionUI != null && this.graph != null) {
+                // Upewnij się, że panel grafu ma referencję do PartitionUI
+                GraphPostPartitionPanel graphPanel = partitionUI.getGraphPostPartitionPanel();
+                if (graphPanel != null) {
+                    graphPanel.setPartitionUI(partitionUI);
+                }
                 this.partitionUI.setGraph(graph, newResults);
             }
         }
-
         // Aktualizacja detailsUI...
     }
 
@@ -86,6 +91,13 @@ public class MainFrame extends JFrame {
 
         // Inicjalizacja PartitionUI
         partitionUI = new PartitionUI();
+        
+        // Połącz GraphPostPartitionPanel z PartitionUI
+        GraphPostPartitionPanel graphPanel = partitionUI.getGraphPostPartitionPanel();
+        if (graphPanel != null) {
+            graphPanel.setPartitionUI(partitionUI);
+        }
+        
         contentPanel.add(partitionUI.getPanel(), PARTITION_PANEL);
 
         // Dodaj obsługę przycisku powrotu
@@ -160,6 +172,12 @@ public class MainFrame extends JFrame {
 
             // Zapisz pozycje przed przełączeniem widoku
             mainUI.saveCurrentPositions();
+
+            // Odśwież połączenie między panelami
+            GraphPostPartitionPanel graphPanel = partitionUI.getGraphPostPartitionPanel();
+            if (graphPanel != null) {
+                graphPanel.setPartitionUI(partitionUI);
+            }
 
             // Ustaw graf i wyniki podziału w PartitionUI
             partitionUI.setGraph(graph, partitionResults);
