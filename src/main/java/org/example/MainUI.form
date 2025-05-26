@@ -138,7 +138,7 @@
           <horizontalAlignment value="0"/>
           <horizontalTextPosition value="0"/>
           <iconTextGap value="4"/>
-          <text value="aplikacja do podziału grafu 🐱 "/>
+          <text value="aplikacja do podziału grafu "/>
           <verifyInputWhenFocusTarget value="false"/>
           <verticalTextPosition value="0"/>
         </properties>

@@ -7,7 +7,7 @@ public class Main {
         SwingUtilities.invokeLater(() -> {
             MainFrame frame = new MainFrame();
             // Tutaj dodaj kod zmieniający ikonę
-            ImageIcon icon = new ImageIcon("src/images/kitty.jpg");
+            ImageIcon icon = new ImageIcon("src/images/cat.png");
             frame.setIconImage(icon.getImage());
             // Koniec kodu ikony
             frame.setVisible(true);

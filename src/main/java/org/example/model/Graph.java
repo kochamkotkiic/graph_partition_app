@@ -44,14 +44,7 @@ public class Graph {
             initGraph(Math.max(initialCapacity + initialCapacity / 4, initialCapacity + 1000));
         }
     }
-    // Dodaj metody do zarządzania pozycjami:
-    public void setVertexPosition(int vertex, Point2D position) {
-        vertexPositions.put(vertex, (Point2D) position.clone());
-    }
 
-    public Point2D getVertexPosition(int vertex) {
-        return vertexPositions.get(vertex);
-    }
 
     public Map<Integer, Point2D> getAllVertexPositions() {
         return new HashMap<>(vertexPositions);
@@ -226,57 +219,7 @@ public class Graph {
         this.groupPtr = groupPtr;
     }
 
-    // DFS on dynamic adjacency list - iterative version to avoid stack overflow
-    public void dfs(int startVertex, boolean[] visited) {
-        Stack<Integer> stack = new Stack<>();
 
-        stack.push(startVertex);
-        visited[startVertex] = true;
-
-        while (!stack.isEmpty()) {
-            int v = stack.pop();
-
-            for (int neighbor : neighbors[v]) {
-                if (!visited[neighbor]) {
-                    visited[neighbor] = true;
-                    stack.push(neighbor);
-                }
-            }
-        }
-    }
-
-    public boolean isConnected() {
-        if (numVertices == 0) return true;
-
-        boolean[] visited = new boolean[numVertices];
-        dfs(0, visited);
-
-        for (int i = 0; i < numVertices; i++) {
-            if (!visited[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public void printGraph() {
-        System.out.printf("Graph (vertices: %d/%d):%n", numVertices, maxVertices);
-        System.out.println("\nAdjacency list:");
-
-        for (int i = 0; i < numVertices; i++) {
-            System.out.printf("%d (group %d): ", i, component[i]);
-            for (int neighbor : neighbors[i]) {
-                System.out.printf("%d ", neighbor);
-            }
-            System.out.println();
-        }
-
-        System.out.printf("Number of components: %d%n", numComponents);
-        for (int i = 0; i < numVertices; i++) {
-            System.out.printf("%d: %d%n", i, component[i]);
-        }
-        System.out.println();
-    }
 
     @SuppressWarnings("unchecked")
     public List<Integer>[] copyNeighbors() {
@@ -287,37 +230,15 @@ public class Graph {
         return copy;
     }
 
-    // Method to trim arrays to actual size (optional memory optimization)
-    @SuppressWarnings("unchecked")
-    public void trimToSize() {
-        if (numVertices < maxVertices) {
-            // Resize neighbors array
-            List<Integer>[] newNeighbors = new List[numVertices];
-            System.arraycopy(neighbors, 0, newNeighbors, 0, numVertices);
-            neighbors = newNeighbors;
-
-            // Resize other arrays
-            neighborCount = Arrays.copyOf(neighborCount, numVertices);
-            maxDistances = Arrays.copyOf(maxDistances, numVertices);
-            groupAssignment = Arrays.copyOf(groupAssignment, numVertices);
-            component = Arrays.copyOf(component, numVertices);
-
-            maxVertices = numVertices;
-        }
-    }
 
     // Getters and setters
-    public int getMaxVertices() { return maxVertices; }
     public void setMaxVertices(int maxVertices) {
         if (maxVertices > this.maxVertices) {
             ensureCapacity(maxVertices);
         }
     }
     public int getNumVertices() { return numVertices; }
-    public void setNumVertices(int numVertices) {
-        this.numVertices = numVertices;
-        ensureCapacity(numVertices);
-    }
+
     public int getNumComponents() { return numComponents; }
     public void setNumComponents(int numComponents) { this.numComponents = numComponents; }
 
@@ -332,20 +253,5 @@ public class Graph {
     public int[] getGroupList() { return groupList; }
     public int[] getGroupPtr() { return groupPtr; }
 
-    /**
-     * Zwraca liczbę krawędzi w grafie
-     * @return liczba krawędzi
-     */
-    public int getNumEdges() {
-        List<Integer>[] neighbors = getNeighbors();
-        int edgeCount = 0;
-        
-        // Sumujemy połowy długości list sąsiedztwa (każda krawędź jest liczona dwa razy)
-        for (int i = 0; i < getNumVertices(); i++) {
-            edgeCount += neighbors[i].size();
-        }
-        
-        // Dzielimy przez 2, bo każda krawędź jest liczona dwa razy (raz dla każdego końca)
-        return edgeCount / 2;
-    }
+
 }

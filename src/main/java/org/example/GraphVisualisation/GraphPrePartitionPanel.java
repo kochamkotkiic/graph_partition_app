@@ -22,8 +22,8 @@ public class GraphPrePartitionPanel extends JPanel {
     private Point lastMousePos;
 
     // Kolory i rozmiary
-    private static final Color VERTEX_COLOR = new Color(70, 130, 180); // SteelBlue
-    private static final Color EDGE_COLOR = new Color(200, 200, 200);
+    private static final Color VERTEX_COLOR = new Color(54, 128, 210); // SteelBlue
+    private static final Color EDGE_COLOR = new Color(206, 203, 203);
     private static final int BASE_VERTEX_SIZE = 5;
 
     public GraphPrePartitionPanel() {

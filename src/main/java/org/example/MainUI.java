@@ -150,17 +150,7 @@ public class MainUI {
         }
     }
 
-    public void savePrePartitionPositions() {
-        if (graphPrePartitionPanelPlaceholder != null) {
-            savedPrePartitionPositions = graphPrePartitionPanelPlaceholder.getVertexPositions();
-        }
-    }
 
-    public void restorePrePartitionPositions() {
-        if (graphPrePartitionPanelPlaceholder != null && !savedPrePartitionPositions.isEmpty()) {
-            graphPrePartitionPanelPlaceholder.setVertexPositions(savedPrePartitionPositions);
-        }
-    }
 
     // Method to set the graph (call it after generating/loading the graph)
     public void setGraph(Graph graph) {
@@ -187,16 +177,6 @@ public class MainUI {
         } else {
             buttonPodziel.setEnabled(false);
             detailsButton.setEnabled(false);
-        }
-    }
-
-    // Dodaj metodę do przywracania pozycji
-    public void restoreGraphState() {
-        if (graph != null && graphPrePartitionPanelPlaceholder != null && 
-            !savedPrePartitionPositions.isEmpty() && 
-            savedPrePartitionPositions.size() == graph.getNumVertices()) {
-            graphPrePartitionPanelPlaceholder.setVertexPositions(savedPrePartitionPositions);
-            graphPrePartitionPanelPlaceholder.setGraph(graph);
         }
     }
 
@@ -363,7 +343,7 @@ public class MainUI {
         pageTitle.setHorizontalAlignment(0);
         pageTitle.setHorizontalTextPosition(0);
         pageTitle.setIconTextGap(4);
-        pageTitle.setText("aplikacja do podziału grafu \uD83D\uDC31 ");
+        pageTitle.setText("aplikacja do podziału grafu");
         pageTitle.setVerifyInputWhenFocusTarget(false);
         pageTitle.setVerticalTextPosition(0);
         gbc = new GridBagConstraints();

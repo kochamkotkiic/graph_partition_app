@@ -179,12 +179,6 @@ public class GraphPostPartitionPanel extends JPanel {
         return transform;
     }
 
-    public void resetView() {
-        zoomLevel = 1.0;
-        panOffset.setLocation(0, 0);
-        updateViewport();
-        repaint();
-    }
 
     @Override
     protected void paintComponent(Graphics g) {

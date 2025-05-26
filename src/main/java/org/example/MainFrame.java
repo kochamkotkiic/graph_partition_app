@@ -1,17 +1,14 @@
 package org.example;
 import org.example.model.PartitionResult;
-import org.example.algorithm.GraphPartitioner;
 import org.example.model.Graph;
 import org.example.io.GraphLoaderCsrrg;
 import org.example.io.GraphLoaderBin;
-import org.example.model.Graph;
 import org.example.GraphVisualisation.GraphPostPartitionPanel;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
 import java.util.List;
-import java.util.ArrayList;
 import org.example.model.GraphException;
 import java.awt.geom.Point2D;
 import java.util.Map;
@@ -33,19 +30,7 @@ public class MainFrame extends JFrame {
     private static final String DETAILS_PANEL = "DETAILS_PANEL";
     private static final String PARTITION_PANEL = "PARTITION_PANEL";
 
-    public void switchToPanel(JPanel newPanel) {
-        // Znajdź nazwę panelu
-        String panelName = MAIN_PANEL; // domyślnie
-        if (newPanel == detailsUI.getPanel()) {
-            panelName = DETAILS_PANEL;
-        } else if (newPanel == partitionUI.getPanel()) {
-            panelName = PARTITION_PANEL;
-        }
 
-        cardLayout.show(contentPanel, panelName);
-        revalidate();
-        repaint();
-    }
 
     // Zostawiamy tylko jedną wersję metody updatePartitionResult
     public void updatePartitionResult(List<PartitionResult.PartitionInfo> newResults) {
@@ -323,19 +308,19 @@ public class MainFrame extends JFrame {
         openHelp.addActionListener(e -> {
             JOptionPane.showMessageDialog(this,
                     "Instrukcja obsługi programu:\n\n" +
-                            "1. Wybierz plik z grafem (.csrrg lub .bin)\n" +
+                            "1. Wybierz plik z grafem (.csrrg lub .bin)-zostanie wyświetlony graf\n" +
                             "2. (Opcjonalnie) Podaj wartość liczby przecięć grafu\n" +
                             "3. (Opcjonalnie) Podaj wartość marginesu\n" +
                             "4. Kliknij przycisk 'Podziel'\n\n" +
                             "Po wykonaniu powyższych kroków zostanie wyświetlony\n" +
-                            "podzielony graf, gdzie każda spójna część grafu\n" +
+                            "podzielony graf (na stronie \"wizualizacja grafu po podziale\"), gdzie każda spójna część grafu\n" +
                             "będzie w innym kolorze.",
                     "Pomoc w obsłudze",
                     JOptionPane.INFORMATION_MESSAGE);
         });
         openDescription.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this,"Celem aplikacji jest dokonanie określonej liczby podziałów w taki sposób aby przy każdym podziale liczba wierzchołków otrzymanych dwóch podgrafów była możliwie równa\n"+
-                    "(z dopuszczalnym marginesem różnicy) oraz aby liczba przeciętych krawędzi była minimalna.\n"+
+            JOptionPane.showMessageDialog(this,"Celem aplikacji jest wizualizacja grafu przed i po podziale. Program dokonuje określoną liczbę podziałów w taki sposób aby przy każdym podziale liczba wierzchołków otrzymanych dwóch podgrafów\n"+
+                            "była możliwie równa (z dopuszczalnym marginesem różnicy) oraz aby liczba przeciętych krawędzi była minimalna.\n"+
                     "Algorytm podziału grafu rozpoczyna się od wyznaczenia wierzchołka centralnego przy użyciu algorytmu Dijkstry, a następnie dzieli graf na dwie grupy metodą DFS,\n"+
                     "dbając o równą liczebność.\n"+
                     "Po podziale sprawdzana jest spójność obu grup — jeśli druga grupa nie jest spójna, zachowywana jest największa jej składowa, a pozostałe wierzchołki są przenoszone do pierwszej grupy.\n"+
