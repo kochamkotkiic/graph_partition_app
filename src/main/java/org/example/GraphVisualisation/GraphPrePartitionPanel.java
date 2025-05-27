@@ -12,6 +12,7 @@ import java.awt.RenderingHints;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.ArrayList;
 
 public class GraphPrePartitionPanel extends JPanel {
     private Graph graph;
@@ -61,52 +62,69 @@ public class GraphPrePartitionPanel extends JPanel {
         int height = getHeight() > 0 ? getHeight() : 600;
         int vertexCount = graph.getNumVertices();
 
-        // Dla dużych grafów używamy prostokątnego układu zamiast koła
+        // Zwiększ obszar roboczy w zależności od rozmiaru grafu
+        if (vertexCount > 30000) {
+            width *= 8;
+            height *= 4;  // Mniejszy mnożnik dla wysokości aby zachować proporcje prostokąta
+        } else if (vertexCount > 5000) {
+            width *= 6;
+            height *= 3;  // Podobnie tutaj
+        }
+
         if (vertexCount > 1000) {
             generateRectangularLayout(width, height, vertexCount);
+            
+            // Stosuj odpowiednie rozpraszanie w zależności od rozmiaru
+            if (vertexCount > 30000) {
+                applyLargeGraphSpacing(width, height, vertexCount);
+            } else if (vertexCount > 5000) {
+                applyMediumGraphSpacing(width, height, vertexCount);
+            }
         } else {
             generateCircularLayout(width, height, vertexCount);
         }
 
-        // Algorytm force-directed z parametrami dostosowanymi do rozmiaru grafu
         applyForceDirectedLayout(width, height, vertexCount);
-
-        // Końcowe rozproszenie dla lepszej czytelności
-        if (vertexCount > 5000) {
-            applyAdditionalSpacing(width, height, vertexCount);
-        }
-
         centerGraph(width, height);
     }
 
     private void generateRectangularLayout(int width, int height, int vertexCount) {
-        // Oblicz wymiary siatki dla lepszego rozkładu
-        double aspectRatio = (double) width / height;
+        double scaleFactor;
+        if (vertexCount > 30000) {
+            scaleFactor = Math.sqrt(vertexCount / 1000.0) * 6.0;
+        } else if (vertexCount > 5000) {
+            scaleFactor = Math.sqrt(vertexCount / 1000.0) * 4.0;
+        } else {
+            scaleFactor = Math.sqrt(vertexCount / 1000.0) * 2.0;
+        }
+        
+        // Zachowaj proporcje prostokąta
+        double usableWidth = width * scaleFactor;
+        double usableHeight = height * (scaleFactor / 2.0); // Połowa dla efektu prostokąta
+        
+        // Oblicz wymiary siatki zachowując proporcje prostokąta
+        double aspectRatio = usableWidth / usableHeight;
         int cols = (int) Math.ceil(Math.sqrt(vertexCount * aspectRatio));
         int rows = (int) Math.ceil((double) vertexCount / cols);
-
-        // Zwiększ obszar użycia dla lepszego rozproszenia
-        double usableWidth = width * 0.85;
-        double usableHeight = height * 0.85;
-        double startX = (width - usableWidth) / 2;
-        double startY = (height - usableHeight) / 2;
-
+        
         double cellWidth = usableWidth / cols;
         double cellHeight = usableHeight / rows;
-
-        Random rand = new Random(42); // Stały seed dla powtarzalności
-
+        
+        Random rand = new Random(42);
+        
         for (int i = 0; i < vertexCount; i++) {
             int row = i / cols;
             int col = i % cols;
-
-            // Dodaj losowe przesunięcie w obrębie komórki
-            double randomOffsetX = (rand.nextDouble() - 0.5) * cellWidth * 0.8;
-            double randomOffsetY = (rand.nextDouble() - 0.5) * cellHeight * 0.8;
-
-            double x = startX + col * cellWidth + cellWidth / 2 + randomOffsetX;
-            double y = startY + row * cellHeight + cellHeight / 2 + randomOffsetY;
-
+        
+            // Większe losowe przesunięcie w poziomie
+            double randomOffsetX = (rand.nextDouble() - 0.5) * cellWidth * 
+                (vertexCount > 5000 ? 1.2 : 0.8);
+            double randomOffsetY = (rand.nextDouble() - 0.5) * cellHeight * 
+                (vertexCount > 5000 ? 0.8 : 0.8);
+        
+            double x = col * cellWidth + cellWidth / 2 + randomOffsetX;
+            double y = row * cellHeight + cellHeight / 2 + randomOffsetY;
+        
             vertexPositions.put(i, new Point2D.Double(x, y));
         }
     }
@@ -265,6 +283,49 @@ public class GraphPrePartitionPanel extends JPanel {
                 double newX = Math.min(Math.max(width * 0.05, pos.getX() + dx), width * 0.95);
                 double newY = Math.min(Math.max(height * 0.05, pos.getY() + dy), height * 0.95);
                 pos.setLocation(newX, newY);
+            }
+        }
+    }
+
+    private void applyLargeGraphSpacing(int width, int height, int vertexCount) {
+        // Podziel przestrzeń na sektory
+        int sectorsX = (int) Math.sqrt(vertexCount / 100);
+        int sectorsY = sectorsX;
+        
+        double sectorWidth = width / (double) sectorsX;
+        double sectorHeight = height / (double) sectorsY;
+        
+        // Przydziel wierzchołki do sektorów
+        Map<Integer, List<Integer>> sectors = new HashMap<>();
+        Random rand = new Random(42);
+        
+        for (int i = 0; i < vertexCount; i++) {
+            int sector = rand.nextInt(sectorsX * sectorsY);
+            sectors.computeIfAbsent(sector, k -> new ArrayList<>()).add(i);
+        }
+        
+        // Rozłóż wierzchołki w sektorach
+        for (Map.Entry<Integer, List<Integer>> entry : sectors.entrySet()) {
+            int sector = entry.getKey();
+            List<Integer> vertices = entry.getValue();
+            
+            int sectorX = sector % sectorsX;
+            int sectorY = sector / sectorsX;
+            
+            double startX = sectorX * sectorWidth;
+            double startY = sectorY * sectorHeight;
+            
+            // Rozłóż wierzchołki w sektorze
+            for (int i = 0; i < vertices.size(); i++) {
+                int vertex = vertices.get(i);
+                
+                double offsetX = rand.nextDouble() * sectorWidth * 0.8 + sectorWidth * 0.1;
+                double offsetY = rand.nextDouble() * sectorHeight * 0.8 + sectorHeight * 0.1;
+                
+                vertexPositions.get(vertex).setLocation(
+                    startX + offsetX,
+                    startY + offsetY
+                );
             }
         }
     }
@@ -463,4 +524,48 @@ public class GraphPrePartitionPanel extends JPanel {
             }
         }
     }
+
+private void applyMediumGraphSpacing(int width, int height, int vertexCount) {
+    // Podziel przestrzeń na sektory z zachowaniem proporcji prostokąta
+    int sectorsX = (int) Math.sqrt(vertexCount / 50);  // Więcej kolumn niż wierszy
+    int sectorsY = sectorsX / 2;  // Połowa wierszy dla efektu prostokąta
+    
+    double sectorWidth = width / (double) sectorsX;
+    double sectorHeight = height / (double) sectorsY;
+    
+    // Przydziel wierzchołki do sektorów
+    Map<Integer, List<Integer>> sectors = new HashMap<>();
+    Random rand = new Random(42);
+    
+    for (int i = 0; i < vertexCount; i++) {
+        int sector = rand.nextInt(sectorsX * sectorsY);
+        sectors.computeIfAbsent(sector, k -> new ArrayList<>()).add(i);
+    }
+    
+    // Rozłóż wierzchołki w sektorach
+    for (Map.Entry<Integer, List<Integer>> entry : sectors.entrySet()) {
+        int sector = entry.getKey();
+        List<Integer> vertices = entry.getValue();
+        
+        int sectorX = sector % sectorsX;
+        int sectorY = sector / sectorsX;
+        
+        double startX = sectorX * sectorWidth;
+        double startY = sectorY * sectorHeight;
+        
+        // Rozłóż wierzchołki w sektorze z większym rozproszeniem w poziomie
+        for (int i = 0; i < vertices.size(); i++) {
+            int vertex = vertices.get(i);
+            
+            // Większe rozproszenie w poziomie
+            double offsetX = rand.nextDouble() * sectorWidth * 0.9 + sectorWidth * 0.05;
+            double offsetY = rand.nextDouble() * sectorHeight * 0.7 + sectorHeight * 0.15;
+            
+            vertexPositions.get(vertex).setLocation(
+                startX + offsetX,
+                startY + offsetY
+            );
+        }
+    }
+}
 }

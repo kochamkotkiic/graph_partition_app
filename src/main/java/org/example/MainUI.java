@@ -101,6 +101,7 @@ public class MainUI {
                 // Update balance status
                 isGraphBalanced.setText(isConnected? "TAK" : "NIE");
                 isGraphBalanced.setForeground(isConnected ? Color.GREEN : Color.RED);
+                buttonPodziel.setEnabled(false);
 
             } else {
                 JOptionPane.showMessageDialog(MainPage,
