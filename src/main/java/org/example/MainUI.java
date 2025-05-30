@@ -23,7 +23,7 @@ public class MainUI {
     private JSpinner spinnerNumCuts;
     private JSpinner spinnerMargines; // Add this field
     private JButton buttonPodziel;
-    private GraphPrePartitionPanel graphPrePartitionPanelPlaceholder; // ta sama nazwa, tylko inny typ
+     // ta sama nazwa, tylko inny typ
     private JLabel successfulCuts;
     private JButton resetujWidokButton;
     private JLabel questionIsGraphBalanced;
@@ -36,6 +36,7 @@ public class MainUI {
     // ... istniejące pola ...
     private Map<Integer, Point2D> savedPrePartitionPositions = new HashMap<>();
     private Map<Integer, Point2D> savedPostPartitionPositions = new HashMap<>();
+    private JPanel graphPrePartitionPanelPlaceholder;
 
     public JButton getdetailsButton() {
         return detailsButton;
@@ -47,26 +48,26 @@ public class MainUI {
 
     public MainUI(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
+        
+        // Ważne: NIE wywołuj tutaj createUIComponents() - zostanie ono wywołane w $$$setupUI$$$()
         $$$setupUI$$$();
-        if (MainPage == null) {
-            MainPage = new JPanel();
-            MainPage.add(new JLabel("Default Panel Content"));
-        }
-
+        
         // Konfiguracja spinnera dla liczby podziałów
         SpinnerNumberModel spinnerNumCutsModel = new SpinnerNumberModel(1, 0, Integer.MAX_VALUE, 1);
         spinnerNumCuts.setModel(spinnerNumCutsModel);
 
         // Konfiguracja spinnera dla marginesu
         SpinnerNumberModel spinnerMarginesModel = new SpinnerNumberModel(10, 0, 100, 1);
-        spinnerMargines.setModel(spinnerMarginesModel); // Use the class field instead of finding by index
+        spinnerMargines.setModel(spinnerMarginesModel);
+        
         buttonPodziel.addActionListener(e -> onPodzielButtonClick());
         resetujWidokButton.addActionListener(e -> onResetujWidokButtonClick());
-
     }
+
+
     public void saveCurrentPositions() {
         if (graphPrePartitionPanelPlaceholder != null) {
-            savedPrePartitionPositions = graphPrePartitionPanelPlaceholder.getVertexPositions();
+            savedPrePartitionPositions = ((GraphPrePartitionPanel)graphPrePartitionPanelPlaceholder).getVertexPositions();
         }
     }
 
@@ -129,13 +130,13 @@ public class MainUI {
                 // Reset spinners to default values
                 spinnerNumCuts.setValue(1);
                 spinnerMargines.setValue(10);
-                
+
                 // Wyczyść zapisane pozycje
                 savedPrePartitionPositions.clear();
                 savedPostPartitionPositions.clear();
-                
+
                 if (graphPrePartitionPanelPlaceholder != null) {
-                    graphPrePartitionPanelPlaceholder.clearVisualization();
+                    ((GraphPrePartitionPanel)graphPrePartitionPanelPlaceholder).clearVisualization();
                 }
                 graph = null;
                 buttonPodziel.setEnabled(false);
@@ -164,14 +165,14 @@ public class MainUI {
             successfulCuts.setText("...");
             isGraphBalanced.setText("...");
             isGraphBalanced.setForeground(Color.BLACK);
-        
+
             if (graphPrePartitionPanelPlaceholder != null) {
                 // Sprawdź czy mamy zapisane pozycje pasujące do tego grafu
-                if (!savedPrePartitionPositions.isEmpty() && 
-                    savedPrePartitionPositions.size() == graph.getNumVertices()) {
-                    graphPrePartitionPanelPlaceholder.setVertexPositions(savedPrePartitionPositions);
+                if (!savedPrePartitionPositions.isEmpty() &&
+                        savedPrePartitionPositions.size() == graph.getNumVertices()) {
+                    ((GraphPrePartitionPanel)graphPrePartitionPanelPlaceholder).setVertexPositions(savedPrePartitionPositions);
                 }
-                graphPrePartitionPanelPlaceholder.setGraph(graph);
+                ((GraphPrePartitionPanel)graphPrePartitionPanelPlaceholder).setGraph(graph);
                 graphPrePartitionPanelPlaceholder.revalidate();
                 graphPrePartitionPanelPlaceholder.repaint();
             }
@@ -186,11 +187,11 @@ public class MainUI {
         if (originalGraph != null) {
             this.graph = originalGraph; // używamy oryginalnego grafu, nie jego kopii
             if (graphPrePartitionPanelPlaceholder != null) {
-                if (!savedPrePartitionPositions.isEmpty() && 
-                    savedPrePartitionPositions.size() == originalGraph.getNumVertices()) {
-                    graphPrePartitionPanelPlaceholder.setVertexPositions(savedPrePartitionPositions);
+                if (!savedPrePartitionPositions.isEmpty() &&
+                        savedPrePartitionPositions.size() == originalGraph.getNumVertices()) {
+                    ((GraphPrePartitionPanel)graphPrePartitionPanelPlaceholder).setVertexPositions(savedPrePartitionPositions);
                 }
-                graphPrePartitionPanelPlaceholder.setGraph(originalGraph);
+                ((GraphPrePartitionPanel)graphPrePartitionPanelPlaceholder).setGraph(originalGraph);
             }
         }
     }
@@ -206,10 +207,9 @@ public class MainUI {
         instructionNumCuts = new JLabel();
         instructionMargines = new JLabel();
         buttonPodziel = new JButton();
-
-        // Initialize both spinners
         spinnerNumCuts = new JSpinner();
         spinnerMargines = new JSpinner();
+        graphPrePartitionPanelPlaceholder = new GraphPrePartitionPanel();
     }
 
     /**
@@ -227,7 +227,7 @@ public class MainUI {
         if (MainPageFont != null) MainPage.setFont(MainPageFont);
         MainPage.setForeground(new Color(-5306302));
         MainPage.setRequestFocusEnabled(false);
-        graphPrePartitionPanelPlaceholder = new GraphPrePartitionPanel();
+        //graphPrePartitionPanelPlaceholder = new GraphPrePartitionPanel();
         graphPrePartitionPanelPlaceholder.setLayout(new GridBagLayout());
         graphPrePartitionPanelPlaceholder.setPreferredSize(new Dimension(0, 0));
         GridBagConstraints gbc;
@@ -464,5 +464,6 @@ public class MainUI {
     public JComponent $$$getRootComponent$$$() {
         return MainPage;
     }
+
 
 }
