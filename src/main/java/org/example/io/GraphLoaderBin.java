@@ -6,6 +6,7 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+
 public class GraphLoaderBin {
 
     public static Graph loadGraph(String filePath) throws IOException {
@@ -15,7 +16,7 @@ public class GraphLoaderBin {
 
             // maxVerticesInRow
             int maxVertices = readUInt32(dis);
-            graph.setMaxVertices(maxVertices); // Możesz nadpisać później, jeśli chcesz ustawić rzeczywistą sumę wierzchołków
+            graph.setMaxVertices(maxVertices);
 
             // vertices_by_rows (pomijamy, niepotrzebne do sąsiedztwa)
             int vertexRowListLength = readUInt32(dis);
@@ -38,7 +39,7 @@ public class GraphLoaderBin {
             // Wczytaj dane wszystkich grafów
             for (int g = 0; g < graphCount; g++) {
                 int vertexCount = readUInt32(dis);
-                int edgeCount = readUInt32(dis); // nieużywane
+                int edgeCount = readUInt32(dis);
 
                 int adjLen = readUInt32(dis);
                 int[] adj = new int[adjLen];
@@ -52,16 +53,13 @@ public class GraphLoaderBin {
                     adjIndex[i] = readUInt32(dis);
                 }
 
-                // Zapamiętaj offsety
                 vertexOffsets[g] = totalVertices;
                 totalVertices += vertexCount;
                 totalAdjLen += adjLen;
-
                 allAdj[g] = adj;
                 allAdjIndex[g] = adjIndex;
             }
 
-            // Tworzymy scalone struktury
             int[] mergedAdj = new int[totalAdjLen];
             int[] mergedAdjIndex = new int[totalVertices + 1];
 
@@ -79,7 +77,6 @@ public class GraphLoaderBin {
                     mergedAdjIndex[vertexPos + v] = adjPos;
 
                     for (int i = start; i < end; i++) {
-                        // dodajemy offset do sąsiada
                         mergedAdj[adjPos++] = adj[i] + vOffset;
                     }
                 }
@@ -96,7 +93,6 @@ public class GraphLoaderBin {
 
         return graph;
     }
-
 
     private static void convertCSRToNeighbors(Graph graph) {
         graph.clearNeighbors();
